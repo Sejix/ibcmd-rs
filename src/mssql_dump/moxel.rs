@@ -6575,11 +6575,14 @@ fn parse_moxel_chart(text: &str, object_refs: &BTreeMap<String, String>) -> Opti
             // Platform 8.5.1.1529 spells the same automatic colour
             // `{4,4,{0},4}`; both spellings publish nothing, so both are the
             // all-automatic tail.
+            // Seven of the eight are automatic; the eighth may be a style
+            // reference (`{4,3,{-10},3}` -> `style:FieldBackColor`), which the
+            // platform publishes.
             if !appended.iter().all(|member| {
                 matches!(
                     compact_moxel_auto_color_token(member).as_str(),
                     "{3,4,{0}}" | "{4,4,{0},4}"
-                )
+                ) || parse_moxel_chart_color(member).is_some()
             }) {
                 return None;
             }
@@ -7633,10 +7636,44 @@ fn parse_moxel_chart_localized(text: &str) -> Option<Vec<MoxelLocalizedValue>> {
     Some(values)
 }
 
+
+/// A style-reference colour code, shared by the 8.3 (`{3,3,{code}}`) and the
+/// 8.5 (`{4,3,{code},3}`) spellings.
+fn moxel_chart_style_color(code: &str) -> Option<String> {
+    Some(
+        match code {
+            "-1" => "style:FormBackColor",
+            "-3" => "style:FormTextColor",
+            "-10" => "style:FieldBackColor",
+            // `DataProcessors/АналитическийБланкСводнаяТаблица/Templates/
+            // МакетФакторныйАнализВодопад` (ERP УХ 3.2.12.6) publishes
+            // `<d3p1:labelColor>style:FieldSelectionBackColor</d3p1:labelColor>`
+            // for `{3,3,{-14}}`.
+            "-14" => "style:FieldSelectionBackColor",
+            "-22" => "style:BorderColor",
+            "-23" => "style:ToolTipBackColor",
+            _ => return None,
+        }
+        .to_string(),
+    )
+}
+
 fn parse_moxel_chart_color(text: &str) -> Option<String> {
     const BORDER_COLOR_UUID: &str = "48312c09-257f-4b29-b280-284dd89efc1e";
 
     let fields = split_1c_braced_fields(text, 0)?;
+    // Platform 8.5.1.1529 writes the same colours in space 4:
+    // `{4,4,{0},4}` is automatic, `{4,3,{<code>},3}` is a style reference.
+    if fields.first()?.trim() == "4" {
+        let payload = split_1c_braced_fields(fields.get(2)?, 0)?;
+        return match fields.get(1)?.trim() {
+            "4" if fields.len() == 4 && payload[..] == ["0"] => Some("auto".to_string()),
+            "3" if fields.len() == 4 && fields.get(3)?.trim() == "3" => {
+                moxel_chart_style_color(payload.first()?.trim())
+            }
+            _ => None,
+        };
+    }
     if fields.first()?.trim() != "3" {
         return None;
     }
@@ -7652,20 +7689,9 @@ fn parse_moxel_chart_color(text: &str) -> Option<String> {
         // `ДлительностьОтложенногоОбновления/ДиаграммаГанта` stores its
         // `timeScale`'s own `backColor` as `{3,3,{-10}}` and publishes
         // `<d3p1:backColor>style:FieldBackColor</d3p1:backColor>`.
-        "3" if fields.len() == 3 && payload.len() == 1 => match payload.first()?.trim() {
-            "-1" => Some("style:FormBackColor".to_string()),
-            "-3" => Some("style:FormTextColor".to_string()),
-            "-10" => Some("style:FieldBackColor".to_string()),
-            // `-14` is new: `DataProcessors/АналитическийБланкСводнаяТаблица/
-            // Templates/МакетФакторныйАнализВодопад` of ERP УХ 3.2.12.6
-            // stores its `pointsScale`'s `labelColor` as `{3,3,{-14}}` and
-            // publishes
-            // `<d3p1:labelColor>style:FieldSelectionBackColor</d3p1:labelColor>`.
-            "-14" => Some("style:FieldSelectionBackColor".to_string()),
-            "-22" => Some("style:BorderColor".to_string()),
-            "-23" => Some("style:ToolTipBackColor".to_string()),
-            _ => None,
-        },
+        "3" if fields.len() == 3 && payload.len() == 1 => {
+            moxel_chart_style_color(payload.first()?.trim())
+        }
         "0" if payload.len() == 1 => {
             if fields.len() == 3 {
                 parse_moxel_direct_color(payload.first()?.trim())
