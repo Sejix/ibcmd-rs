@@ -6756,40 +6756,47 @@ fn dump_table_row_bytes(
                 "unknown",
                 "output_path_collision",
             ))
-        } else if let Some(row) = context.metadata_texts_by_file_name.get(file_name)
-            && let Some(modelled) = context
-                .model_export
-                .and_then(|model| model.export_row(row, bytes))
-                .and_then(|result| match result {
-                    Ok(extracted) => Some(extracted),
-                    Err(error) => {
-                        model_export::report_fallback(file_name, &error);
-                        timings.model_fallback_rows += 1;
-                        None
-                    }
-                })
-        {
-            timings.model_metadata_xml_rows += 1;
-            timings.model_metadata_xml_convert_us += micros(started);
-            model_row = true;
-            if model_export::shadow() {
-                let shadow_started = Instant::now();
-                let legacy = legacy_from_text(row);
-                shadow_us = micros(shadow_started);
-                timings.model_shadow_rows += 1;
-                timings.model_shadow_legacy_convert_us += shadow_us;
-                if !model_export::same_as_written(
-                    legacy.as_ref().ok(),
-                    &modelled,
-                    context.source_version,
-                ) {
-                    timings.model_shadow_differing_rows += 1;
-                    model_export::report_shadow_difference(file_name, &modelled.relative_path);
-                }
-            }
-            Ok(modelled)
         } else if let Some(row) = context.metadata_texts_by_file_name.get(file_name) {
-            legacy_from_text(row)
+            let modelled = context
+                .model_export
+                .and_then(|model| model.export_row(row, bytes));
+            match modelled {
+                Some(Ok(modelled)) => {
+                    timings.model_metadata_xml_rows += 1;
+                    timings.model_metadata_xml_convert_us += micros(started);
+                    model_row = true;
+                    if model_export::shadow() {
+                        let shadow_started = Instant::now();
+                        let legacy = legacy_from_text(row);
+                        shadow_us = micros(shadow_started);
+                        timings.model_shadow_rows += 1;
+                        timings.model_shadow_legacy_convert_us += shadow_us;
+                        if !model_export::same_as_written(
+                            legacy.as_ref().ok(),
+                            &modelled,
+                            context.source_version,
+                        ) {
+                            timings.model_shadow_differing_rows += 1;
+                            model_export::report_shadow_difference(file_name, &modelled.relative_path);
+                        }
+                    }
+                    Ok(modelled)
+                }
+                Some(Err(error)) => {
+                    model_export::report_fallback(file_name, &error);
+                    if model_export::fail_on_fallback() {
+                        // The fail-closed side of the assurance invariant: the
+                        // row is not handed to the legacy converter, so a gap
+                        // can never hide behind a successful-looking tree.
+                        return Err(error.context(format!(
+                            "model export cannot write {file_name}; fail-closed is enabled"
+                        )));
+                    }
+                    timings.model_fallback_rows += 1;
+                    legacy_from_text(row)
+                }
+                None => legacy_from_text(row),
+            }
         } else {
             extract_metadata_source_xml_with_recalculation_refs_with_object_ref_resolutions(
                 &bytes,

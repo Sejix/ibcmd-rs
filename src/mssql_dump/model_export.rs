@@ -43,6 +43,20 @@ pub(super) fn quiet_summaries() -> bool {
 pub(super) const MODEL_EXPORT_ENV: &str = "IBCMD_RS_MODEL_EXPORT";
 pub(super) const LEGACY_EXPORT_ENV: &str = "IBCMD_RS_LEGACY_EXPORT";
 
+/// `IBCMD_RS_FAIL_ON_MODEL_FALLBACK=1`: a row the model cannot write fails the
+/// export instead of being handed to the legacy converter. This is the
+/// fail-closed side of the assurance invariant: an export either reproduces
+/// every row through the model or stops, so a gap is never hidden by a
+/// successful-looking tree.
+pub(super) const FAIL_ON_FALLBACK_ENV: &str = "IBCMD_RS_FAIL_ON_MODEL_FALLBACK";
+
+pub(super) fn fail_on_fallback() -> bool {
+    static FAIL: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *FAIL.get_or_init(|| {
+        std::env::var(FAIL_ON_FALLBACK_ENV).is_ok_and(|value| value.trim() == "1")
+    })
+}
+
 /// Whether a full export writes its descriptors through the model: yes,
 /// unless `--legacy-export`, `IBCMD_RS_LEGACY_EXPORT=1` or
 /// `IBCMD_RS_MODEL_EXPORT=0` asks for the legacy converters.
