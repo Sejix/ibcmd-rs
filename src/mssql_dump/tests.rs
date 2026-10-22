@@ -80601,3 +80601,13 @@ fn mxl_torg13_parses_all_rows() {
     assert!(sheet.rows.last().and_then(|row| row.columns_id.as_deref())
         == Some("97c79b94-d3a9-4813-af59-c74f73613b21"));
 }
+
+#[test]
+fn mxl_legacy_pictures_parse() {
+    use std::collections::BTreeMap;
+    let text = include_str!("fixtures/mxl_pictures.txt");
+    let text = &text[text.find('{').expect("body brace")..];
+    let sheet = super::moxel::parse_moxel_spreadsheet_text(text, &BTreeMap::new())
+        .expect("spreadsheet parses");
+    assert_eq!(sheet.pictures.len(), 5);
+}

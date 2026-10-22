@@ -6177,14 +6177,15 @@ pub(super) fn parse_moxel_pictures(
             && !shapes.shapes[index + 1..=index + count]
                 .iter()
                 .all(|shape| {
-                    shape.leads_with(4) && shape.len as usize > MOXEL_PICTURE_TRANSPARENCY_FIELD
+                    (shape.leads_with(4) || shape.leads_with(3))
+                        && shape.len as usize > MOXEL_PICTURE_TRANSPARENCY_FIELD
                 })
         {
             continue;
         }
         let mut pictures = Vec::with_capacity(count);
         for (picture_index, field) in fields[index + 1..=index + count].iter().enumerate() {
-            let Some(mut picture) = parse_moxel_picture(field, object_refs) else {
+            let Some(mut picture) = parse_moxel_picture_with_index(field, object_refs, picture_index) else {
                 pictures.clear();
                 break;
             };
@@ -6205,13 +6206,24 @@ pub(super) fn parse_moxel_picture(
     text: &str,
     object_refs: &BTreeMap<String, String>,
 ) -> Option<MoxelPicture> {
+    parse_moxel_picture_with_index(text, object_refs, 0)
+}
+
+pub(super) fn parse_moxel_picture_with_index(
+    text: &str,
+    object_refs: &BTreeMap<String, String>,
+    table_index: usize,
+) -> Option<MoxelPicture> {
     let fields = split_1c_braced_fields(text, 0)?;
     // The older spreadsheets (root revisions 8/9) store the record one member
     // shorter under the leading `3` (`{3,0,{0},"",-1,-1,1,0}`), every member
     // up to the transparency flag at the same position.
-    match fields.first()?.trim() {
+    let head = fields.first()?.trim();
+    match head {
         "4" => {}
-        "3" if fields.len() == 8 => {}
+        // The legacy record: `{3,3,{0},"",-1,-1,0,{{#base64:…}},0}` (nine
+        // members, payload in member 7) and the older eight-member form.
+        "3" if (8..=10).contains(&fields.len()) => {}
         _ => return None,
     }
     // A picture record always reaches its transparency member, so a shorter
@@ -6265,8 +6277,13 @@ pub(super) fn parse_moxel_picture(
         .iter()
         .find_map(|field| extract_base64_payload(field))
         .map(normalize_moxel_picture_payload);
+    let index = if head == "3" {
+        table_index
+    } else {
+        fields.get(1)?.trim().parse::<usize>().ok()?
+    };
     Some(MoxelPicture {
-        index: fields.get(1)?.trim().parse::<usize>().ok()?,
+        index,
         ref_name,
         payload,
         transparency: fields
