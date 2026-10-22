@@ -14509,7 +14509,9 @@ fn parse_form_child_item_with_metadata_owners(
         } else {
             None
         },
-        group_horizontal_align: if let Some((schema, _)) = field_schema_and_options.as_ref() {
+        group_horizontal_align: if tag == "Table" && matches!(wrapper, "50" | "53") {
+            None
+        } else if let Some((schema, _)) = field_schema_and_options.as_ref() {
             schema
                 .group_horizontal_align(&fields)
                 .map(FormFieldGroupHorizontalAlign::xml_value)
@@ -14920,7 +14922,9 @@ fn parse_form_child_item_with_metadata_owners(
         vertical_align: field_schema_and_options
             .as_ref()
             .and_then(|(schema, _)| schema.vertical_align(&fields)),
-        group_vertical_align: if let Some((schema, _)) = field_schema_and_options.as_ref() {
+        group_vertical_align: if tag == "Table" && matches!(wrapper, "50" | "53") {
+            None
+        } else if let Some((schema, _)) = field_schema_and_options.as_ref() {
             schema
                 .group_vertical_align(&fields)
                 .map(FormFieldVerticalAlign::xml_value)
