@@ -80586,11 +80586,18 @@ fn flowchart_sized_autofont_reads_height() {
 }
 
 #[test]
-#[ignore = "reproduces the missing trailing MXL row"]
 fn mxl_torg13_parses_all_rows() {
+    use std::collections::BTreeMap;
     let text = include_str!("fixtures/mxl_torg13.txt");
-    let text = text.trim_start_matches('\u{feff}');
-    let rows = super::moxel::parse_moxel_rows_for_test(text);
-    eprintln!("rows={} first={:?} last={:?}", rows.len(), rows.first().map(|r| r.index), rows.last().map(|r| r.index));
-    assert_eq!(rows.len(), 36);
+    let text = &text[text.find('{').expect("body brace")..];
+    let sheet = super::moxel::parse_moxel_spreadsheet_text(text, &BTreeMap::new())
+        .expect("spreadsheet parses");
+    eprintln!(
+        "rows={} last={:?}",
+        sheet.rows.len(),
+        sheet.rows.last().map(|row| (row.index, row.columns_id.clone()))
+    );
+    assert_eq!(sheet.rows.len(), 36);
+    assert!(sheet.rows.last().and_then(|row| row.columns_id.as_deref())
+        == Some("97c79b94-d3a9-4813-af59-c74f73613b21"));
 }
