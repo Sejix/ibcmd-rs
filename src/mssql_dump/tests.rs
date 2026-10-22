@@ -80703,3 +80703,40 @@ fn catalog_row_registers_its_generated_types() {
     );
     assert!(names.types.iter().any(|t| t.category == "Object"));
 }
+
+#[test]
+fn catalog_row_yields_legacy_type_index_entries() {
+    let text = include_str!("fixtures/catalog_row_types.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let code = super::parse_metadata_object_code(text);
+    let header = super::parse_metadata_header_from_text(text, "b733af52-99f6-4369-8bab-df3ee91c6719");
+    eprintln!("code={code:?} header={:?}", header.as_ref().map(|h| h.name.clone()));
+    let row = super::MetadataTextRow {
+        file_name: "b733af52-99f6-4369-8bab-df3ee91c6719".to_string(),
+        text: text.to_string(),
+        object_code: code,
+        header,
+        kind: Some("Catalog".to_string()),
+        folder: None,
+    };
+    let entries = super::parse_indexed_generated_types_from_text(&row);
+    eprintln!(
+        "entries={:?}",
+        entries.as_ref().map(|list| list.iter().map(|e| e.type_id.clone()).collect::<Vec<_>>())
+    );
+    assert!(entries.is_some_and(|list| list.iter().any(|e| e.type_id == "6c7c7af3-5f07-4567-a025-286f9e5964e7")));
+}
+
+#[test]
+fn attribute_type_pattern_resolves_catalog_object() {
+    use std::collections::BTreeMap;
+    let mut index = BTreeMap::new();
+    index.insert(
+        "6c7c7af3-5f07-4567-a025-286f9e5964e7".to_string(),
+        "cfg:CatalogObject.ТипыДокументов".to_string(),
+    );
+    let pattern = "{\"Pattern\",\n{\"#\",6c7c7af3-5f07-4567-a025-286f9e5964e7}}";
+    let parsed = super::form_body::parse_form_type_pattern(pattern, &index);
+    eprintln!("parsed={parsed:?}");
+    assert!(parsed.is_some_and(|types| !types.is_empty()));
+}
