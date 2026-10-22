@@ -80509,3 +80509,18 @@ fn graphical_scheme_profit_parses() {
     );
     assert!(parsed.is_some(), "scheme profit must parse");
 }
+
+#[test]
+fn graphical_scheme_envd_parses() {
+    use std::collections::{BTreeMap, BTreeSet};
+    let text = include_str!("fixtures/graphical_scheme_envd.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let parsed = super::parse_business_process_flowchart_text_with_types(
+        text,
+        &BTreeMap::new(),
+        &BTreeMap::new(),
+        &BTreeMap::new(),
+        &BTreeSet::new(),
+    );
+    assert!(parsed.is_some(), "scheme envd must parse");
+}

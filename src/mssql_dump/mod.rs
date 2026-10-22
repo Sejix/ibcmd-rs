@@ -7567,8 +7567,11 @@ fn parse_flowchart_color(value: &str, object_refs: &BTreeMap<String, String>) ->
         return None;
     }
     if fields.get(1)?.trim() == "4" {
+        // Kind `4` is the automatic colour; the single payload member is a
+        // default hint the platform does not print (`{3,4,{-14}}` publishes
+        // `auto` in КартаЕНВД).
         let payload = split_1c_braced_fields(fields.get(2)?, 0)?;
-        return (payload.len() == 1 && payload.first()?.trim() == "0").then(|| "auto".to_string());
+        return (payload.len() == 1).then(|| "auto".to_string());
     }
     parse_form_control_color(value, object_refs)
 }
