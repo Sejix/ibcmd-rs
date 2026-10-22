@@ -80548,3 +80548,30 @@ fn graphical_scheme_map_parses() {
     );
     assert!(parsed.is_some(), "scheme map must parse");
 }
+
+#[test]
+fn graphical_scheme_card82_parses() {
+    use std::collections::{BTreeMap, BTreeSet};
+    let text = include_str!("fixtures/graphical_scheme_card82.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let parsed = super::parse_business_process_flowchart_text_with_types(
+        text,
+        &BTreeMap::new(),
+        &BTreeMap::new(),
+        &BTreeMap::new(),
+        &BTreeSet::new(),
+    );
+    assert!(parsed.is_some(), "scheme card82 must parse");
+}
+
+#[test]
+fn moxel_sized_autofont_reads_height() {
+    use std::collections::BTreeMap;
+    let font = super::moxel::parse_moxel_font("{7,3,2,100,1,100}", &BTreeMap::new())
+        .expect("sized AutoFont parses");
+    assert_eq!(font.kind, "AutoFont");
+    assert_eq!(font.height.as_deref(), Some("10"));
+    let font = super::moxel::parse_moxel_font("{7,3,2,80,1,100}", &BTreeMap::new())
+        .expect("sized AutoFont parses");
+    assert_eq!(font.height.as_deref(), Some("8"));
+}

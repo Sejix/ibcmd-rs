@@ -5063,6 +5063,22 @@ pub(super) fn parse_moxel_font(
         // `ttlFont`/`legFont` as this exact five-field shape and publishes
         // `<d3p1:ttlFont kind="AutoFont"/>` (no `ref`, no explicit member
         // attribute) for both.
+        // A sized `AutoFont`: `{7,3,2,<height*10>,<weight flag>,100}` publishes
+        // `<Font height="10" kind="AutoFont"/>` (Accounting 3.0 templates).
+        "3" if fields.len() == 6 && fields.get(5)?.trim() == "100" => {
+            let height_raw = fields.get(3)?.trim().parse::<usize>().ok()?;
+            Some(MoxelFont {
+                ref_name: None,
+                face_name: None,
+                height: Some(format_moxel_font_height(height_raw)),
+                bold: None,
+                italic: None,
+                underline: None,
+                strikeout: None,
+                kind: "AutoFont",
+                scale: None,
+            })
+        }
         "3" if fields.len() == 5
             && fields.get(2)?.trim() == "0"
             && fields.get(3)?.trim() == "1"

@@ -8258,11 +8258,14 @@ fn parse_flowchart_font_tuple(text: &str) -> Option<FlowchartFont> {
             // The sized form comes under both markers (`{6,…}` and `{7,…}`)
             // and in two lengths; the sizeless `{7,3,0,1,100}` is told apart by
             // its own fixed members, not by the marker.
-            if matches!(fields.len(), 5 | 6 | 7) {
-                if fields.len() == 5
+            if matches!(fields.len(), 4 | 5 | 6 | 7) {
+                if (fields.len() == 4
                     && fields.get(2)?.trim() == "0"
-                    && fields.get(3)?.trim() == "1"
-                    && fields.get(4)?.trim() == "100"
+                    && fields.get(3)?.trim() == "1")
+                    || (fields.len() == 5
+                        && fields.get(2)?.trim() == "0"
+                        && fields.get(3)?.trim() == "1"
+                        && fields.get(4)?.trim() == "100")
                 {
                     return Some(FlowchartFont {
                         reference: String::new(),
@@ -8900,15 +8903,15 @@ fn push_flowchart_localized_indented_xml(
 }
 
 fn push_flowchart_font_xml(xml: &mut String, font: &FlowchartFont) {
-    if font.kind == "AutoFont" {
-        xml.push_str("\t\t\t\t<Font kind=\"AutoFont\"/>\r\n");
-        return;
-    }
     xml.push_str("\t\t\t\t<Font");
-    if font.reference.starts_with("sys:") {
-        xml.push_str(" xmlns:sys=\"http://v8.1c.ru/8.1/data/ui/fonts/system\"");
+    // An `AutoFont` carries no ref but may carry an explicit height and style
+    // (`<Font height="12" bold="true" kind="AutoFont"/>`).
+    if font.kind != "AutoFont" {
+        if font.reference.starts_with("sys:") {
+            xml.push_str(" xmlns:sys=\"http://v8.1c.ru/8.1/data/ui/fonts/system\"");
+        }
+        xml.push_str(&format!(" ref=\"{}\"", escape_xml_text(&font.reference)));
     }
-    xml.push_str(&format!(" ref=\"{}\"", escape_xml_text(&font.reference)));
     if let Some(height) = &font.height {
         xml.push_str(&format!(" height=\"{}\"", escape_xml_text(height)));
     }
