@@ -1905,7 +1905,12 @@ impl<'a> FormCommandSchema<'a> {
         picture_value: &[&str],
         picture_reference: &[&str],
     ) -> Option<Self> {
-        if !matches!(fields.first().map(|field| field.trim()), Some("9" | "11")) {
+        // Root-42 bodies keep command records under tag `8`; the arity and
+        // picture checks below still pin the shape.
+        if !matches!(
+            fields.first().map(|field| field.trim()),
+            Some("8" | "9" | "11")
+        ) {
             return None;
         }
         let bindings = fields
@@ -1913,7 +1918,12 @@ impl<'a> FormCommandSchema<'a> {
             .and_then(|field| field.trim().parse::<usize>().ok())
             .filter(|bindings| *bindings >= 1)?;
         let extra = bindings.checked_sub(1)?.checked_mul(2)?;
-        if fields.len() != 19usize.checked_add(extra)? {
+        let base: usize = if fields.first().map(|field| field.trim()) == Some("8") {
+            18
+        } else {
+            19
+        };
+        if fields.len() != base.checked_add(extra)? {
             return None;
         }
         for index in 0..bindings.checked_sub(1)? {
@@ -1927,6 +1937,7 @@ impl<'a> FormCommandSchema<'a> {
             }
         }
 
+        let picture = FormPictureValueSchema::from_raw_layout(picture_value);
         let picture = FormPictureValueSchema::from_raw_layout(picture_value)?;
         let picture_reference_is_exact = match picture.kind() {
             FormPictureValueKind::Empty => {
@@ -1950,11 +1961,19 @@ impl<'a> FormCommandSchema<'a> {
             return None;
         }
 
-        let current_row_use = match fields.get(18 + extra).map(|field| field.trim()) {
+        // The root-42 record closes one member earlier and does not carry the
+        // member at all: the platform writes `DontUse` for every one of them,
+        // which is the legacy default.
+        let legacy = fields.first().map(|field| field.trim()) == Some("8");
+        let current_row_use = if legacy {
+            Some(FormCommandCurrentRowUse::DontUse)
+        } else {
+            match fields.get(18 + extra).map(|field| field.trim()) {
             Some("0") => Some(FormCommandCurrentRowUse::Use),
             Some("1") => Some(FormCommandCurrentRowUse::DontUse),
-            Some("2") => None,
-            _ => return None,
+                Some("2") => None,
+                _ => return None,
+            }
         };
         let associated_table_element_id = match fields.get(14).map(|field| field.trim()) {
             Some("0") => None,

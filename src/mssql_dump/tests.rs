@@ -80766,7 +80766,6 @@ fn v33_form_writes_standard_attribute_data_path() {
 }
 
 #[test]
-#[ignore = "reproduces raw N:uuid command names on a root-42 form"]
 fn root42_form_resolves_its_commands() {
     use std::collections::BTreeMap;
     let text = include_str!("fixtures/form_root42_commands.txt");
