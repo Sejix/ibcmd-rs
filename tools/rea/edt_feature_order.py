@@ -135,11 +135,14 @@ def main() -> int:
     parser.add_argument("--method", required=True)
     parser.add_argument("--element", required=True)
     parser.add_argument("--version", required=True)
+    parser.add_argument("--drop-tail", type=int, default=0, help="отбросить последние свойства-контейнеры")
     parser.add_argument("--out", required=True, type=Path)
     args = parser.parse_args()
 
     version = tuple(int(part) for part in args.version.split(".")[:3])
     features = feature_order(args.java.read_text(encoding="utf-8"), args.method, version)
+    if args.drop_tail:
+        features = features[: -args.drop_tail]
 
     native = json.loads(args.native.read_text(encoding="utf-8"))
     element = next((item for item in native["elements"] if item["element"] == args.element), None)
@@ -182,3 +185,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
