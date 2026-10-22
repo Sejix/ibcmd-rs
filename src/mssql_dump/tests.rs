@@ -80689,3 +80689,17 @@ fn mxl_merge_regions_are_unique() {
     eprintln!("merges={} unique={}", sheet.merges.len(), unique.len());
     assert_eq!(sheet.merges.len(), 81);
 }
+
+#[test]
+fn catalog_row_registers_its_generated_types() {
+    let text = include_str!("fixtures/catalog_row_types.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let tree = crate::metadata_model::brace::parse_row(text.as_bytes()).expect("row parses");
+    let names = crate::metadata_model::export::object_names("Catalog", &tree).expect("names");
+    assert_eq!(names.full_name, "Catalog.ТипыДокументов");
+    eprintln!(
+        "types: {:?}",
+        names.types.iter().map(|t| (t.category.clone(), t.type_id.clone())).collect::<Vec<_>>()
+    );
+    assert!(names.types.iter().any(|t| t.category == "Object"));
+}

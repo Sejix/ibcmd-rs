@@ -2462,6 +2462,16 @@ fn write_source_asset_inner(
                 })?;
                 &owned_body
             };
+            // A V2 container carries layout only: the platform generates the
+            // list table (and its columns) from the main table's metadata, so
+            // the written XML is knowingly incomplete. Say so once per file
+            // instead of losing it in silence.
+            if body.revision == crate::module_blob::FormBodyRevision::V2 {
+                eprintln!(
+                    "incomplete form (V2 layout, platform-generated table): {}",
+                    asset.primary_path.display()
+                );
+            }
             // A platform 8.5 body is read through its 8.3.27 down-conversion;
             // what its appended members say is applied to the written XML.
             let converted_8_5_1;
