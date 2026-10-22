@@ -6544,7 +6544,7 @@ fn parse_moxel_chart(text: &str, object_refs: &BTreeMap<String, String>) -> Opti
         return None;
     }
     let payload = split_1c_braced_fields(text, 0)?;
-    if payload.len() != 2 || compact_moxel_chart_token(payload.first()?) != "{11}" {
+    if payload.len() != 2 || compact_moxel_auto_color_token(payload.first()?) != "{11}" {
         return None;
     }
     let data = split_1c_braced_fields(payload.get(1)?, 0)?;
@@ -6577,7 +6577,7 @@ fn parse_moxel_chart(text: &str, object_refs: &BTreeMap<String, String>) -> Opti
             // all-automatic tail.
             if !appended.iter().all(|member| {
                 matches!(
-                    compact_moxel_chart_token(member).as_str(),
+                    compact_moxel_auto_color_token(member).as_str(),
                     "{3,4,{0}}" | "{4,4,{0},4}"
                 )
             }) {
@@ -6896,7 +6896,7 @@ fn parse_moxel_chart(text: &str, object_refs: &BTreeMap<String, String>) -> Opti
     // colour; the pair is cross-checked rather than either being asserted a
     // literal.
     let mirrored_start = post.get(axes_position.checked_add(17)?)?;
-    let mirrored_start = if compact_moxel_chart_token(mirrored_start) == "{3,4,{0}}" {
+    let mirrored_start = if compact_moxel_auto_color_token(mirrored_start) == "{3,4,{0}}" {
         None
     } else {
         Some(parse_moxel_chart_color_with_refs(
@@ -7094,12 +7094,12 @@ struct MoxelGanttSeriesLikeData {
 /// `picture` members `<d3p1:series>` does not carry).
 fn parse_gantt_points_data(text: &str) -> Option<MoxelGanttSeriesLikeData> {
     let outer = split_1c_braced_fields(text, 0)?;
-    if outer.len() != 2 || compact_moxel_chart_token(outer.first()?) != "1" {
+    if outer.len() != 2 || compact_moxel_auto_color_token(outer.first()?) != "1" {
         return None;
     }
     let inner = split_1c_braced_fields(outer.get(1)?, 0)?;
     if inner.len() != 8
-        || compact_moxel_chart_token(inner.first()?) != "3"
+        || compact_moxel_auto_color_token(inner.first()?) != "3"
         || inner.get(1)?.trim() != "0"
         || inner.get(2)?.trim() != "1"
         || inner.get(3)?.trim() != "0"
@@ -7108,15 +7108,15 @@ fn parse_gantt_points_data(text: &str) -> Option<MoxelGanttSeriesLikeData> {
         return None;
     }
     let value = split_1c_braced_fields(inner.get(4)?, 0)?;
-    if value.len() != 4 || compact_moxel_chart_token(value.first()?) != "2" {
+    if value.len() != 4 || compact_moxel_auto_color_token(value.first()?) != "2" {
         return None;
     }
     let base_data = gantt_series_key_record_base_data(value.get(1)?)?;
-    if compact_moxel_chart_token(value.get(2)?) != "{4,0,{0},\"\",-1,-1,1,0,\"\"}" {
+    if compact_moxel_auto_color_token(value.get(2)?) != "{4,0,{0},\"\",-1,-1,1,0,\"\"}" {
         return None;
     }
     parse_moxel_font(value.get(3)?, &BTreeMap::new())?;
-    if compact_moxel_chart_token(inner.get(5)?)
+    if compact_moxel_auto_color_token(inner.get(5)?)
         != "{0,1,{0,{0,{3,0,{0}},{3,0,{0}}},{3,4,{0}},{3,4,{0}}}}"
     {
         return None;
@@ -7137,7 +7137,7 @@ fn parse_gantt_series_data(text: &str) -> Option<MoxelGanttSeriesLikeData> {
     }
     let inner = split_1c_braced_fields(outer.get(1)?, 0)?;
     if inner.len() != 8
-        || compact_moxel_chart_token(inner.first()?) != "3"
+        || compact_moxel_auto_color_token(inner.first()?) != "3"
         || inner.get(1)?.trim() != "0"
         || inner.get(2)?.trim() != "1"
         || inner.get(3)?.trim() != "0"
@@ -7146,11 +7146,11 @@ fn parse_gantt_series_data(text: &str) -> Option<MoxelGanttSeriesLikeData> {
         return None;
     }
     let value = split_1c_braced_fields(inner.get(4)?, 0)?;
-    if value.len() != 2 || compact_moxel_chart_token(value.first()?) != "3" {
+    if value.len() != 2 || compact_moxel_auto_color_token(value.first()?) != "3" {
         return None;
     }
     let base_data = gantt_series_key_record_base_data(value.get(1)?)?;
-    if compact_moxel_chart_token(inner.get(5)?) != "{0,1,{0,{0,{3,0,{0}},{3,0,{0}}},{3,0,{0}}}}" {
+    if compact_moxel_auto_color_token(inner.get(5)?) != "{0,1,{0,{0,{3,0,{0}},{3,0,{0}}},{3,0,{0}}}}" {
         return None;
     }
     let auto_text = parse_moxel_chart_bool(inner.get(6)?)?;
@@ -7166,6 +7166,17 @@ fn parse_gantt_series_data(text: &str) -> Option<MoxelGanttSeriesLikeData> {
 /// literal no observation varies (`itemKey`/`key`/`parentKey`/`leftKey`/
 /// `rightKey`/`extKey` all `0`, `title` empty, two `{"U"}` markers this
 /// reader does not interpret, `cacheKey` `0`).
+
+/// The two spellings of an automatic colour token: 8.3.27/8.5.1.1150 write
+/// `{3,0,{0}}`/`{3,4,{0}}`, 8.5.1.1529 writes `{4,0,{0},0}`/`{4,4,{0},4}`.
+/// Both publish nothing, so a literal comparison normalizes the newer spelling
+/// to the older one.
+fn compact_moxel_auto_color_token(text: &str) -> String {
+    compact_moxel_chart_token(text)
+        .replace("{4,0,{0},0}", "{3,0,{0}}")
+        .replace("{4,4,{0},4}", "{3,4,{0}}")
+}
+
 fn gantt_series_key_record_base_data(text: &str) -> Option<String> {
     let fields = split_1c_braced_fields(text, 0)?;
     const PREFIX: [&str; 9] = ["8", "0", "0", "0", "0", "0", "{\"U\"}", "{1,0}", "{\"U\"}"];
@@ -7173,7 +7184,7 @@ fn gantt_series_key_record_base_data(text: &str) -> Option<String> {
         return None;
     }
     for (index, expected) in PREFIX.iter().enumerate() {
-        if compact_moxel_chart_token(fields.get(index)?) != *expected {
+        if compact_moxel_auto_color_token(fields.get(index)?) != *expected {
             return None;
         }
     }
@@ -7227,10 +7238,10 @@ fn parse_gantt_time_scale(text: &str) -> Option<MoxelGanttTimeScale> {
     if count == 0
         || count > 128
         || fields.len() != 7 + count
-        || compact_moxel_chart_token(fields.first()?) != "3"
+        || compact_moxel_auto_color_token(fields.first()?) != "3"
         || fields.get(1)?.trim() != "0"
         || fields.get(3 + count)?.trim() != "0"
-        || compact_moxel_chart_token(fields.get(5 + count)?) != "{3,3,{-3}}"
+        || compact_moxel_auto_color_token(fields.get(5 + count)?) != "{3,3,{-3}}"
     {
         return None;
     }
@@ -7242,18 +7253,18 @@ fn parse_gantt_time_scale(text: &str) -> Option<MoxelGanttTimeScale> {
     for field in fields.get(3..3 + count)? {
         let level = split_1c_braced_fields(field, 0)?;
         if level.len() != 12
-            || compact_moxel_chart_token(level.first()?) != "8"
+            || compact_moxel_auto_color_token(level.first()?) != "8"
             || level.get(2)?.trim() != "1"
-            || compact_moxel_chart_token(level.get(5)?) != "{3,0,{12632256}}"
-            || compact_moxel_chart_token(level.get(8)?) != "{0,{1,0,0}}"
-            || compact_moxel_chart_token(level.get(9)?) != "{3,4,{0}}"
-            || compact_moxel_chart_token(level.get(10)?) != "{3,4,{0}}"
+            || compact_moxel_auto_color_token(level.get(5)?) != "{3,0,{12632256}}"
+            || compact_moxel_auto_color_token(level.get(8)?) != "{0,{1,0,0}}"
+            || compact_moxel_auto_color_token(level.get(9)?) != "{3,4,{0}}"
+            || compact_moxel_auto_color_token(level.get(10)?) != "{3,4,{0}}"
             || level.get(11)?.trim() != "1"
         {
             return None;
         }
         let measure = moxel_gantt_time_measure(level.get(1)?)?;
-        let line_style = match compact_moxel_chart_token(level.get(4)?).as_str() {
+        let line_style = match compact_moxel_auto_color_token(level.get(4)?).as_str() {
             "{4,0,{0},1,1,0,e5cabe59-d992-4d31-8086-3116931aff81,0}" => "Solid",
             "{4,0,{0},2,1,0,e5cabe59-d992-4d31-8086-3116931aff81,0}" => "Dotted",
             _ => return None,
@@ -7393,12 +7404,15 @@ fn parse_moxel_gantt_chart(
     if chart_triple.len() != 3 || chart_triple.first()?.trim() != "0" {
         return None;
     }
+    if std::env::var_os("DSH_DEBUG_MXL").is_some() { eprintln!("gantt step chart"); }
     let chart = parse_moxel_chart(
         &format!("{{{},{}}}", chart_triple.get(1)?, chart_triple.get(2)?),
         object_refs,
     )?;
 
+    if std::env::var_os("DSH_DEBUG_MXL").is_some() { eprintln!("gantt step points"); }
     let points = parse_gantt_points_data(fields.get(2)?)?;
+    if std::env::var_os("DSH_DEBUG_MXL").is_some() { eprintln!("gantt step series"); }
     let series = parse_gantt_series_data(fields.get(3)?)?;
     // Two more design-time-only fields no observation ties to any XML
     // content, same treatment as the plain `Chart`'s own literal-heavy
@@ -7406,18 +7420,22 @@ fn parse_moxel_gantt_chart(
     if fields.get(4)?.trim() != "0" || fields.get(5)?.trim() != "0" {
         return None;
     }
+    if std::env::var_os("DSH_DEBUG_MXL").is_some() { eprintln!("gantt step draw_empty"); }
     let draw_empty = parse_moxel_chart_bool(fields.get(6)?)?;
+    if std::env::var_os("DSH_DEBUG_MXL").is_some() { eprintln!("gantt step time_scale"); }
     let time_scale = parse_gantt_time_scale(fields.get(7)?)?;
     // `keepScaleVariant`: only `"2"` (`AllData`) observed on either record.
     if fields.get(8)?.trim() != "2" {
         return None;
     }
+    if std::env::var_os("DSH_DEBUG_MXL").is_some() { eprintln!("gantt step measure"); }
     let fixed_variant_measure = moxel_gantt_time_measure(fields.get(9)?)?;
     // `fixedVariantInterval` (`1`) and `autoFullInterval` (`true`): literals,
     // unvaried between the two records.
     if fields.get(10)?.trim() != "1" || fields.get(11)?.trim() != "1" {
         return None;
     }
+    if std::env::var_os("DSH_DEBUG_MXL").is_some() { eprintln!("gantt step date_begin"); }
     let full_interval_begin = parse_moxel_gantt_date(fields.get(12)?)?;
     let full_interval_end = parse_moxel_gantt_date(fields.get(13)?)?;
     let visual_begin = parse_moxel_gantt_date(fields.get(14)?)?;
@@ -7433,18 +7451,20 @@ fn parse_moxel_gantt_chart(
         || fields.get(17)?.trim() != "30"
         || fields.get(18)?.trim() != "0"
         || fields.get(20)?.trim() != "0"
-        || compact_moxel_chart_token(fields.get(21)?) != "{1,0}"
+        || compact_moxel_auto_color_token(fields.get(21)?) != "{1,0}"
     {
         return None;
     }
+    if std::env::var_os("DSH_DEBUG_MXL").is_some() { eprintln!("gantt step vertical_scroll"); }
     let vertical_scroll_enable = parse_moxel_chart_bool(fields.get(19)?)?;
+    if std::env::var_os("DSH_DEBUG_MXL").is_some() { eprintln!("gantt step outbound"); }
     let outbound_color = parse_moxel_chart_color(fields.get(22)?)?;
     // `backIntervals` (`collection.ticks`/`ticks` both `0`): literal,
     // unvaried between the two records.
     let back_intervals = split_1c_braced_fields(fields.get(23)?, 0)?;
     if back_intervals.len() != 3
         || back_intervals[0].trim() != "3"
-        || compact_moxel_chart_token(back_intervals[2]) != "{0,0}"
+        || compact_moxel_auto_color_token(back_intervals[2]) != "{0,0}"
         || fields.get(24)?.trim() != "0"
     {
         return None;
@@ -7452,12 +7472,14 @@ fn parse_moxel_gantt_chart(
     let collection = split_1c_braced_fields(back_intervals[1], 0)?;
     if collection.len() != 3
         || collection[0].trim() != "0"
-        || compact_moxel_chart_token(collection[1]) != "{1,0,0}"
+        || compact_moxel_auto_color_token(collection[1]) != "{1,0,0}"
     {
         return None;
     }
     let back_interval_ticks = collection[2].trim().parse::<u64>().ok()?;
+    if std::env::var_os("DSH_DEBUG_MXL").is_some() { eprintln!("gantt step links"); }
     let links_color = parse_moxel_chart_color(fields.get(25)?)?;
+    if std::env::var_os("DSH_DEBUG_MXL").is_some() { eprintln!("gantt step links_line"); }
     let links_line = parse_moxel_chart_line(fields.get(26)?)?;
     if links_line.width != 1 {
         return None;
@@ -7469,7 +7491,7 @@ fn parse_moxel_gantt_chart(
     // version-18 records of the Библиотека стандартных подсистем release
     // (fixture `moxel-ganttchart-v18`); the platform publishes `Auto` for
     // both.
-    if compact_moxel_chart_token(fields.get(27)?) != "{0,0,0}"
+    if compact_moxel_auto_color_token(fields.get(27)?) != "{0,0,0}"
         || fields.get(29)?.trim() != "0"
         || !matches!(fields.get(30)?.trim(), "0" | "1")
     {
@@ -7556,8 +7578,8 @@ pub(super) fn parse_and_render_moxel_gantt_chart_for_test(text: &str) -> Option<
 
 fn parse_moxel_chart_series(fields: &[&str]) -> Option<MoxelChartSeries> {
     if fields.len() != 11
-        || compact_moxel_chart_token(fields.get(8)?) != "{\"U\"}"
-        || compact_moxel_chart_token(fields.get(9)?) != "{\"U\"}"
+        || compact_moxel_auto_color_token(fields.get(8)?) != "{\"U\"}"
+        || compact_moxel_auto_color_token(fields.get(9)?) != "{\"U\"}"
     {
         return None;
     }
@@ -7576,8 +7598,8 @@ fn parse_moxel_chart_series(fields: &[&str]) -> Option<MoxelChartSeries> {
 
 fn parse_moxel_chart_point(fields: &[&str]) -> Option<MoxelChartPoint> {
     if fields.len() != 11
-        || compact_moxel_chart_token(fields.get(8)?) != "{\"U\"}"
-        || compact_moxel_chart_token(fields.get(9)?) != "{\"U\"}"
+        || compact_moxel_auto_color_token(fields.get(8)?) != "{\"U\"}"
+        || compact_moxel_auto_color_token(fields.get(9)?) != "{\"U\"}"
     {
         return None;
     }
@@ -7694,7 +7716,7 @@ fn parse_moxel_chart_border(text: &str) -> Option<MoxelChartBorder> {
     if fields.len() != 7
         || fields.first()?.trim() != "3"
         || fields.get(1)?.trim() != "0"
-        || compact_moxel_chart_token(fields.get(2)?) != "{0}"
+        || compact_moxel_auto_color_token(fields.get(2)?) != "{0}"
         || fields.get(5)?.trim() != "0"
         || parse_uuid_field(fields.get(6)?).is_none()
     {
@@ -7716,7 +7738,7 @@ fn parse_moxel_chart_line(text: &str) -> Option<MoxelChartLine> {
     if fields.len() != 8
         || fields.first()?.trim() != "4"
         || fields.get(1)?.trim() != "0"
-        || compact_moxel_chart_token(fields.get(2)?) != "{0}"
+        || compact_moxel_auto_color_token(fields.get(2)?) != "{0}"
         || fields.get(3)?.trim() != "1"
         || fields.get(5)?.trim() != "0"
         || !fields.get(6)?.trim().eq_ignore_ascii_case(SOLID_LINE_UUID)
@@ -7744,7 +7766,7 @@ fn parse_moxel_chart_styled_line(text: &str) -> Option<(usize, &'static str)> {
     if fields.len() != 8
         || fields.first()?.trim() != "4"
         || fields.get(1)?.trim() != "0"
-        || compact_moxel_chart_token(fields.get(2)?) != "{0}"
+        || compact_moxel_auto_color_token(fields.get(2)?) != "{0}"
         || fields.get(5)?.trim() != "0"
         || !fields.get(6)?.trim().eq_ignore_ascii_case(SOLID_LINE_UUID)
         || fields.get(7)?.trim() != "0"
@@ -7835,7 +7857,7 @@ fn parse_moxel_chart_palette(
     let fields = split_1c_braced_fields(text, 0)?;
     if fields.len() != 6
         || fields.first()?.trim() != "0"
-        || compact_moxel_chart_token(fields.get(3)?) != "{3,4,{0}}"
+        || compact_moxel_auto_color_token(fields.get(3)?) != "{3,4,{0}}"
         || fields.get(4)?.trim() != "0"
         || fields.get(5)?.trim() != "0"
     {
@@ -7843,7 +7865,7 @@ fn parse_moxel_chart_palette(
     }
     let name = moxel_chart_palette_name(fields.get(1)?)?;
     let start = fields.get(2)?;
-    let gradient_start_color = if compact_moxel_chart_token(start) == "{3,4,{0}}" {
+    let gradient_start_color = if compact_moxel_auto_color_token(start) == "{3,4,{0}}" {
         None
     } else {
         Some(parse_moxel_chart_color_with_refs(start, object_refs)?)
@@ -7898,9 +7920,9 @@ fn parse_moxel_chart_scale(
         || fields.get(1)?.trim() != "0"
         || fields.get(2)?.trim() != "0"
         || fields.get(3)?.trim() != "2"
-        || compact_moxel_chart_token(fields.get(4)?) != "{1,0}"
+        || compact_moxel_auto_color_token(fields.get(4)?) != "{1,0}"
         || !MOXEL_CHART_SCALE_TITLE_AREAS
-            .contains(&compact_moxel_chart_token(fields.get(5)?).as_str())
+            .contains(&compact_moxel_auto_color_token(fields.get(5)?).as_str())
         || fields.get(7)?.trim() != "0"
     {
         return None;
@@ -7925,19 +7947,19 @@ fn parse_moxel_chart_scale(
     } else {
         None
     };
-    if compact_moxel_chart_token(fields.get(9 + grid)?) != "{3,4,{0}}"
+    if compact_moxel_auto_color_token(fields.get(9 + grid)?) != "{3,4,{0}}"
         || fields.get(14 + grid)?.trim() != "0"
-        || compact_moxel_chart_token(fields.get(15 + grid)?) != "{3,4,{0}}"
+        || compact_moxel_auto_color_token(fields.get(15 + grid)?) != "{3,4,{0}}"
         || (16 + grid..22 + grid)
             .any(|index| fields.get(index).is_none_or(|field| field.trim() != "0"))
     {
         return None;
     }
-    let label_font = match compact_moxel_chart_token(fields.get(10 + grid)?).as_str() {
+    let label_font = match compact_moxel_auto_color_token(fields.get(10 + grid)?).as_str() {
         "{7,3,0,1,100}" => None,
         _ => Some(parse_moxel_font(fields.get(10 + grid)?, &BTreeMap::new())?),
     };
-    let label_color = if compact_moxel_chart_token(fields.get(11 + grid)?) == "{3,4,{0}}" {
+    let label_color = if compact_moxel_auto_color_token(fields.get(11 + grid)?) == "{3,4,{0}}" {
         None
     } else {
         Some(parse_moxel_chart_color_with_refs(
@@ -8016,7 +8038,7 @@ fn parse_moxel_chart_data_item(
     tooltip: &str,
 ) -> Option<MoxelChartDataItem> {
     let typed = split_1c_braced_fields(value, 0)?;
-    if typed.len() != 2 || compact_moxel_chart_token(value_info) != "{\"U\"}" {
+    if typed.len() != 2 || compact_moxel_auto_color_token(value_info) != "{\"U\"}" {
         return None;
     }
     // The stored value names its own type, and `"N"` was not the only one it
@@ -8190,7 +8212,7 @@ fn validate_moxel_chart_v74_front(tail: &[&str]) -> Option<()> {
     ];
     if !expected.iter().all(|(index, value)| {
         tail.get(*index)
-            .is_some_and(|slot| compact_moxel_chart_token(slot) == *value)
+            .is_some_and(|slot| compact_moxel_auto_color_token(slot) == *value)
     }) {
         return None;
     }
@@ -8254,7 +8276,7 @@ fn validate_moxel_chart_v74_post_prefix(post: &[&str], is_title_init: bool) -> O
         .iter()
         .all(|(index, value)| {
             post.get(*index)
-                .is_some_and(|slot| compact_moxel_chart_token(slot) == *value)
+                .is_some_and(|slot| compact_moxel_auto_color_token(slot) == *value)
         })
         .then_some(())
 }
@@ -8299,7 +8321,7 @@ fn validate_moxel_chart_v74_scale_id_list(post: &[&str], series_count: usize) ->
     }
     for k in 0..n {
         let index = 24usize.checked_add(n)?.checked_add(k)?;
-        if compact_moxel_chart_token(post.get(index)?) != "{0,0}" {
+        if compact_moxel_auto_color_token(post.get(index)?) != "{0,0}" {
             return None;
         }
     }
@@ -8345,7 +8367,7 @@ fn validate_moxel_chart_v74_post_axes_tail(post: &[&str], axes_position: usize) 
             axes_position
                 .checked_add(*offset)
                 .and_then(|index| post.get(index))
-                .is_some_and(|slot| compact_moxel_chart_token(slot) == *value)
+                .is_some_and(|slot| compact_moxel_auto_color_token(slot) == *value)
         })
         .then_some(())
 }
