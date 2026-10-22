@@ -15166,6 +15166,18 @@ fn parse_form_child_item_with_metadata_owners(
                         crate::form_schema::form_output_code(options.get(3).copied())
                     })
                     .flatten()
+            })
+            .or_else(|| {
+                // A `FormattedDocumentField` keeps `Output` in slot 5 of its
+                // own 16-member `1` tuple: `0` where the platform writes
+                // nothing, `1` on `<Output>Enable</Output>`; the neighbouring
+                // field of the same form reads `0` there.
+                (tag == "FormattedDocumentField")
+                    .then(|| {
+                        let (_, options) = form_document_field_geometry_options(tag, &fields)?;
+                        crate::form_schema::form_output_code(options.get(5).copied())
+                    })
+                    .flatten()
             }),
         graphical_scheme_edit: parse_form_document_field_flag(tag, fields, |layout| layout.edit),
         excluded_commands: parse_form_excluded_commands(tag, fields),
@@ -35724,8 +35736,10 @@ pub(super) fn format_form_child_item_xml(
     // counted both ways. The one `GraphicalSchemaField` of the stand that
     // carries the element writes it in the same place -- behind `DataPath` and
     // `TitleLocation`, ahead of `ContextMenu`, `ExtendedTooltip` and `Events`.
-    if matches!(item.tag, "HTMLDocumentField" | "GraphicalSchemaField")
-        && let Some(output) = item.document_field_output
+    if matches!(
+        item.tag,
+        "HTMLDocumentField" | "GraphicalSchemaField" | "FormattedDocumentField"
+    ) && let Some(output) = item.document_field_output
     {
         xml.push_str(&format!(
             "{tab}\t<Output>{}</Output>\r\n",
