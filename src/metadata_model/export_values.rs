@@ -54,7 +54,10 @@ pub(crate) struct Header {
 
 pub(crate) fn header(node: &Brace) -> Result<Header> {
     let items = list(node)?;
-    if atom(item(items, 0)?)? != "3" || items.len() != 9 {
+    // Modern rows open with `3`; legacy ones (Accounting 3.0 forms, templates
+    // and their owners) open with `2` and carry one member less.
+    let tag = atom(items.first().ok_or_else(|| anyhow!("empty header"))?)?;
+    if !matches!(tag, "2" | "3") || !matches!(items.len(), 8 | 9) {
         bail!("not an md header: {}", short(node));
     }
     let identity = list(item(items, 1)?)?;
