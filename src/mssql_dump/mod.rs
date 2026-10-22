@@ -8238,7 +8238,11 @@ fn parse_flowchart_font_tuple(text: &str) -> Option<FlowchartFont> {
                     ..FlowchartFont::default()
                 });
             }
-            if fields.len() == 6 {
+            // The sized `AutoFont` keeps height (tenths) at member 3 and
+            // weight at member 4; the trailing member is a flag. Both the
+            // five-member `{6,3,2,100,1}` and six-member
+            // `{6,3,6,120,700,1}` spellings occur.
+            if fields.first()?.trim() == "6" && matches!(fields.len(), 5 | 6) {
                 let tenths = fields.get(3)?.trim().parse::<i64>().ok()?;
                 let weight = fields.get(4)?.trim().parse::<i64>().ok()?;
                 let height = format!("{}", tenths / 10);
