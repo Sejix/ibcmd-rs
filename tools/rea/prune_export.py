@@ -108,19 +108,24 @@ for path in dst.rglob("*.xml"):
 # (`<DefaultStyle>Style.Стиль1</DefaultStyle>`). Empty such an element instead
 # of deleting the line: the property still has to exist.
 element = re.compile(r"^(?P<indent>\s*)<(?P<tag>[\w:]+)>\s*(?P<value>[^<]*?)\s*</(?P=tag)>\s*$")
+item = re.compile(r"^\s*<xr:Item\b[^>]*>[^<]*</xr:Item>\s*$")
 lines = config_path.read_text(encoding="utf-8").splitlines(keepends=True)
 rewritten = []
 changed = 0
+dropped = 0
 for line in lines:
     match = element.match(line)
     if match and match.group("value") in references:
         rewritten.append(f"{match.group('indent')}<{match.group('tag')}/>\n")
         changed += 1
-    else:
-        rewritten.append(line)
+        continue
+    if item.match(line) and any(reference in line for reference in references):
+        dropped += 1
+        continue
+    rewritten.append(line)
 config_path.write_text("".join(rewritten), encoding="utf-8")
 
-print("removed", len(removed), "entries and their references;", changed, "configuration properties emptied")
+print("removed", len(removed), "entries;", changed, "properties emptied;", dropped, "list items dropped")
 
 # Usage:
 #   python tools/rea/prune_export.py <src-tree> <dst-tree> "Kind1,Kind2"
