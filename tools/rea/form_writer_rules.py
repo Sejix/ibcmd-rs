@@ -164,10 +164,19 @@ def file_offset(layout: dict, rva: int) -> int | None:
     return None
 
 
+def result_value(payload: dict) -> list:
+    value = payload.get("normalized_result")
+    if value is None:
+        raw = payload.get("raw_result")
+        value = raw.get("value") if isinstance(raw, dict) else raw
+    return value if isinstance(value, list) else []
+
+
 def decompile_text(payload: dict) -> str:
     value = payload.get("normalized_result")
     if value is None:
-        value = (payload.get("raw_result") or {}).get("value")
+        raw = payload.get("raw_result")
+        value = raw.get("value") if isinstance(raw, dict) else raw
     if isinstance(value, dict):
         value = value.get("value")
     return value if isinstance(value, str) else ""
@@ -223,7 +232,7 @@ def extract(dll: Path, elements: list[str]) -> dict:
             found = client.tool("search_strings", {"pattern": element, "mode": "literal"})
             addresses = [
                 item["address"]
-                for item in (found.get("normalized_result") or found.get("raw_result", {}).get("value") or [])
+                for item in result_value(found)
                 if item.get("value") == element
             ]
             if not addresses:
@@ -233,7 +242,7 @@ def extract(dll: Path, elements: list[str]) -> dict:
             entries: list[int] = []
             for address in addresses:
                 refs = client.tool("xrefs", {"address": address})
-                for ref in refs.get("normalized_result") or refs.get("raw_result", {}).get("value") or []:
+                for ref in result_value(refs):
                     rva = int(ref, 16) - image_base
                     entry = function_entry(layout, rva)
                     if entry is not None and entry not in entries:
