@@ -80794,3 +80794,16 @@ fn root42_form_keeps_its_tables() {
     eprintln!("tables: {}", xml.matches("<Table ").count());
     assert!(xml.contains("<Table name=\"ПоляДорожки1\""), "{}", xml.matches("<Table ").count());
 }
+
+#[test]
+#[ignore = "reproduces a dropped tag-53 list table on a root-48 form"]
+fn root48_list_form_keeps_its_table() {
+    use std::collections::BTreeMap;
+    let text = include_str!("fixtures/form_root48_list.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let body = crate::module_blob::parse_form_body_plain(text).expect("body parses");
+    let xml = super::extract_form_body_xml_from_body(&body, &BTreeMap::new(), &BTreeMap::new())
+        .expect("xml");
+    eprintln!("tables: {}", xml.matches("<Table ").count());
+    assert!(xml.contains("<Table name=\"Список\""), "{}", xml.matches("<Table ").count());
+}
