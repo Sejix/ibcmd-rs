@@ -6572,10 +6572,15 @@ fn parse_moxel_chart(text: &str, object_refs: &BTreeMap<String, String>) -> Opti
         "74" => 97usize,
         "75" => {
             let appended = data.get(data.len().checked_sub(8)?..)?;
-            if !appended
-                .iter()
-                .all(|member| compact_moxel_chart_token(member) == "{3,4,{0}}")
-            {
+            // Platform 8.5.1.1529 spells the same automatic colour
+            // `{4,4,{0},4}`; both spellings publish nothing, so both are the
+            // all-automatic tail.
+            if !appended.iter().all(|member| {
+                matches!(
+                    compact_moxel_chart_token(member).as_str(),
+                    "{3,4,{0}}" | "{4,4,{0},4}"
+                )
+            }) {
                 return None;
             }
             105usize
