@@ -654,9 +654,11 @@ fn renumber_root_46_attribute_chains(node: &mut Node) {
     let is_chain = items.len() >= 3
         && matches!(items.first(), Some(Node::Leaf(tag)) if tag == "2")
         && matches!(items.get(1), Some(Node::List(root)) if root.len() == 1)
-        && items[2..]
-            .iter()
-            .all(|member| matches!(member, Node::List(member) if member.len() == 1));
+        // A member is one id (`{-3}`) or an id and a uuid (`{0,d52ab7ed…}`);
+        // both belong to the chain, and only `items[1]` is the attribute root.
+        && items[2..].iter().all(|member| {
+            matches!(member, Node::List(member) if matches!(member.len(), 1 | 2))
+        });
     if is_chain
         && let Some(Node::List(root)) = items.get_mut(1)
         && let Some(Node::Leaf(id)) = root.first_mut()

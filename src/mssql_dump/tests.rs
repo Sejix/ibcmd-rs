@@ -80751,8 +80751,16 @@ fn v33_form_writes_standard_attribute_data_path() {
         "6c7c7af3-5f07-4567-a025-286f9e5964e7".to_string(),
         "cfg:CatalogObject.ТипыДокументов".to_string(),
     )]);
-    let xml = super::extract_form_body_xml_from_body(&body, &type_index, &BTreeMap::new())
+    let object_refs = BTreeMap::from([(
+        "d52ab7ed-2f8c-448c-95af-207b65386dc5".to_string(),
+        "Catalog.ТипыДокументов.Attribute.ПолноеНаименование".to_string(),
+    )]);
+    let xml = super::extract_form_body_xml_from_body(&body, &type_index, &object_refs)
         .expect("xml");
-    eprintln!("has description path: {}", xml.contains("<DataPath>Объект.Description</DataPath>"));
+    eprintln!(
+        "has description path: {} has full name path: {}",
+        xml.contains("<DataPath>Объект.Description</DataPath>"),
+        xml.contains("<DataPath>Объект.ПолноеНаименование</DataPath>")
+    );
     assert!(xml.contains("<DataPath>Объект.Description</DataPath>"), "{xml}");
 }
