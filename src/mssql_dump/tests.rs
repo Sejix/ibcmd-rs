@@ -80740,3 +80740,20 @@ fn attribute_type_pattern_resolves_catalog_object() {
     eprintln!("parsed={parsed:?}");
     assert!(parsed.is_some_and(|types| !types.is_empty()));
 }
+
+#[test]
+#[ignore = "reproduces the missing DataPath on a wrapper-33 form"]
+fn v33_form_writes_standard_attribute_data_path() {
+    use std::collections::BTreeMap;
+    let text = include_str!("fixtures/form_v33_data_path.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let body = crate::module_blob::parse_form_body_plain(text).expect("body parses");
+    let type_index = BTreeMap::from([(
+        "6c7c7af3-5f07-4567-a025-286f9e5964e7".to_string(),
+        "cfg:CatalogObject.ТипыДокументов".to_string(),
+    )]);
+    let xml = super::extract_form_body_xml_from_body(&body, &type_index, &BTreeMap::new())
+        .expect("xml");
+    eprintln!("has description path: {}", xml.contains("<DataPath>Объект.Description</DataPath>"));
+    assert!(xml.contains("<DataPath>Объект.Description</DataPath>"), "{xml}");
+}

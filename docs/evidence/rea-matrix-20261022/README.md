@@ -1482,3 +1482,33 @@ formctx type_index entries=25057 has_catalog_object=true
 Тесты 4068, расхождений 668. Следующий шаг: проверить, что owner-map,
 которую получает `parse_form_child_item_data_path`, содержит id «1» с
 `exact_single_type_reference`.
+
+### Раунд 105: офлайн-репро отсутствующего `DataPath`
+
+Добавлена фикстура `fixtures/form_v33_data_path.txt` (тело формы
+`Catalogs/ТипыДокументов/Forms/ФормаЭлемента`, 4 862 символа) и тест
+`v33_form_writes_standard_attribute_data_path` (ignored):
+
+```rust
+let body = parse_form_body_plain(text)?;
+let type_index = {"6c7c7af3-…" => "cfg:CatalogObject.ТипыДокументов"};
+let xml = extract_form_body_xml_from_body(&body, &type_index, &{})?;
+assert!(xml.contains("<DataPath>Объект.Description</DataPath>"));
+```
+
+Тест воспроизводит потерю **за секунды** (без полной выгрузки) — это резко
+ускоряет итерации.
+
+Проверено в этом же тесте: владелец реквизита строится правильно —
+
+```
+owner attr id=1 name=Объект
+types=[Reference { reference: "cfg:CatalogObject.ТипыДокументов" }]
+exact=Some("cfg:CatalogObject.ТипыДокументов")
+```
+
+То есть тип у владельца есть, и потеря происходит **внутри** цепочки разрешения
+привязки `{2,{1},{-3}}` (ветки `parse_bound_slot`), а не в индексе и не в
+owner-map.
+
+Тесты 4068 (+1 ignored репро), расхождений 668.
