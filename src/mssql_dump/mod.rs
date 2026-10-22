@@ -8273,13 +8273,13 @@ fn parse_flowchart_font_tuple(text: &str) -> Option<FlowchartFont> {
                         ..FlowchartFont::default()
                     });
                 }
-                let tenths = fields.get(3)?.trim().parse::<i64>().ok()?;
+                // `font_height_xml` divides the stored tenths itself.
+                let tenths = fields.get(3)?.trim();
                 let weight = fields.get(4)?.trim().parse::<i64>().ok()?;
-                let height = format!("{}", tenths / 10);
                 return Some(FlowchartFont {
                     reference: String::new(),
                     kind: "AutoFont",
-                    height: font_height_xml(Some(height.as_str())),
+                    height: font_height_xml(Some(tenths)),
                     bold: Some(weight >= 700),
                     ..FlowchartFont::default()
                 });

@@ -80575,3 +80575,12 @@ fn moxel_sized_autofont_reads_height() {
         .expect("sized AutoFont parses");
     assert_eq!(font.height.as_deref(), Some("8"));
 }
+
+#[test]
+fn flowchart_sized_autofont_reads_height() {
+    let font = super::parse_flowchart_font_tuple("{7,3,2,80,1,100}").expect("sized AutoFont");
+    assert_eq!(font.kind, "AutoFont");
+    assert_eq!(font.height.as_deref(), Some("8"));
+    let font = super::parse_flowchart_font_tuple("{7,3,2,100,1,100}").expect("sized AutoFont");
+    assert_eq!(font.height.as_deref(), Some("10"));
+}
