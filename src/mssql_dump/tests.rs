@@ -80584,3 +80584,13 @@ fn flowchart_sized_autofont_reads_height() {
     let font = super::parse_flowchart_font_tuple("{7,3,2,100,1,100}").expect("sized AutoFont");
     assert_eq!(font.height.as_deref(), Some("10"));
 }
+
+#[test]
+#[ignore = "reproduces the missing trailing MXL row"]
+fn mxl_torg13_parses_all_rows() {
+    let text = include_str!("fixtures/mxl_torg13.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let rows = super::moxel::parse_moxel_rows_for_test(text);
+    eprintln!("rows={} first={:?} last={:?}", rows.len(), rows.first().map(|r| r.index), rows.last().map(|r| r.index));
+    assert_eq!(rows.len(), 36);
+}

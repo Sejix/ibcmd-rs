@@ -3882,6 +3882,19 @@ pub(super) fn is_moxel_compactable_empty_row(row: &MoxelRow) -> bool {
     row.format_index <= 1 && row.columns_id.is_none() && row.cells.is_empty()
 }
 
+
+#[cfg(test)]
+pub(super) fn parse_moxel_rows_for_test(text: &str) -> Vec<MoxelRow> {
+    let Some(start) = text.find('{') else {
+        return Vec::new();
+    };
+    let Some(fields) = split_1c_braced_fields(&text[start..], 0) else {
+        return Vec::new();
+    };
+    let refs = fields.iter().map(|field| field.trim()).collect::<Vec<_>>();
+    parse_moxel_rows(&refs)
+}
+
 pub(super) fn parse_moxel_rows(fields: &[&str]) -> Vec<MoxelRow> {
     // The row block sits right behind the header/footer block, and the scalar
     // this scan reads as its first marker is the template-mode flag, not part
