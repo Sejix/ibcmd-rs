@@ -18554,6 +18554,23 @@ pub(super) fn parse_form_radio_button_options<'a>(fields: &'a [&'a str]) -> Opti
     })
 }
 
+
+/// The physical spelling of a legacy link chain (`1/0:<uuid>`,
+/// `7:<uuid>/0:<uuid>`), which the platform writes when the binding does not
+/// resolve to a named data path.
+fn physical_choice_parameter_link_path(members: &[&str]) -> Option<String> {
+    let mut segments = Vec::new();
+    for member in members {
+        let fields = split_1c_braced_fields(member.trim(), 0)?;
+        match fields.as_slice() {
+            [kind] => segments.push(kind.trim().to_string()),
+            [kind, uuid] => segments.push(format!("{}:{}", kind.trim(), uuid.trim())),
+            _ => return None,
+        }
+    }
+    Some(segments.join("/"))
+}
+
 /// The legacy `{5004,…}` link collection: each link stores the bound data path
 /// itself (`{1}` + `{0,<attribute binding>}` for a form attribute,
 /// `{7,<table item>}` + `{0,<column binding>}` for a table column), and the
@@ -18584,6 +18601,8 @@ fn parse_legacy_5004_choice_parameter_links(
         index += 1;
         let second = fields.get(index)?.trim().to_string();
         index += 1;
+        let physical = physical_choice_parameter_link_path(&[first.as_str(), second.as_str()]);
+        let debug = std::env::var_os("DSH_DEBUG_5004").is_some();
         let value_change_token = fields.get(index)?.trim().to_string();
         let value_change = match value_change_token.as_str() {
             "0" => FormChoiceParameterLinkValueChange::Clear,
@@ -18592,60 +18611,61 @@ fn parse_legacy_5004_choice_parameter_links(
             }
         };
         index += 1;
+        let table_head = split_1c_braced_fields(&first, 0)?;
         let data_path = if first == "{1}" {
-            let key = parse_form_binding_key(&second)?;
-            match data_path_by_binding_key.get(&key) {
+            let semantic = parse_form_binding_key(&second)
+                .and_then(|key| data_path_by_binding_key.get(&key).cloned())
                 // The legacy link names the choice parameter's own path
-                // (`Объект.Организация`), while the route map holds the
-                // attribute's type path (`ВалютаРегламентированногоУчета.
-                // Организация`).
-                Some(path) => format!("Объект.{}", path.rsplit('.').next().unwrap_or(path)),
+                // (`Объект.Организация`); the route map holds the attribute's
+                // type path (`ВалютаРегламентированногоУчета.Организация`).
+                .map(|path| format!("Объект.{}", path.rsplit('.').next().unwrap_or(&path)));
+            match semantic.or(physical) {
+                Some(path) => path,
+                None => return None,
+            }
+        } else if table_head.first()?.trim() == "7" {
+            // The uuid in `{7,<uuid>}` is the form container, not a table id;
+            // the table is the one owning this column binding.
+            let semantic = parse_form_binding_key(&second).and_then(|column_key| {
+                let mut found = Vec::new();
+                for (table_id, columns) in table_column_names_by_id {
+                    if let Some(column) = columns.get(&column_key) {
+                        if let Some(table) = table_name_by_id.get(table_id) {
+                            found.push((table_id.clone(), format!("Items.{table}.CurrentData.{column}")));
+                        }
+                    }
+                }
+                match found.as_slice() {
+                    [(table_id, path)] => Some(
+                        type_link_data_path_by_table_column
+                            .get(&(table_id.clone(), column_key.clone()))
+                            .cloned()
+                            .unwrap_or_else(|| path.clone()),
+                    ),
+                    _ => {
+                        let uuid = column_key.rsplit('|').next().unwrap_or(&column_key);
+                        let mut routes = Vec::new();
+                        for ((table_key, candidate), path) in type_link_data_path_by_table_column {
+                            if candidate == &column_key || candidate.contains(uuid) || table_key.contains(uuid) {
+                                routes.push(path.clone());
+                            }
+                        }
+                        routes.sort();
+                        routes.dedup();
+                        routes.first().cloned()
+                    }
+                }
+            });
+            match semantic.or(physical) {
+                Some(path) => path,
                 None => return None,
             }
         } else {
-            let head = split_1c_braced_fields(&first, 0)?;
-            if head.first()?.trim() != "7" {
-                return None;
-            }
-            // The uuid in `{7,<uuid>}` is the form container, not a table id;
-            // the table is the one owning this column binding, and the map is
-            // unambiguous in practice.
-            let column_key = parse_form_binding_key(&second)?;
-            let mut found = Vec::new();
-            for (table_id, columns) in table_column_names_by_id {
-                if let Some(column) = columns.get(&column_key) {
-                    let table = match table_name_by_id.get(table_id) {
-                        Some(table) => table.clone(),
-                        None => continue,
-                    };
-                    found.push((
-                        table_id.clone(),
-                        format!("Items.{table}.CurrentData.{column}"),
-                    ));
-                }
-            }
-            match found.as_slice() {
-                [(table_id, path)] => type_link_data_path_by_table_column
-                    .get(&(table_id.clone(), column_key.clone()))
-                    .cloned()
-                    .unwrap_or_else(|| path.clone()),
-                _ => {
-                    // The ready routes name the column by its own binding, and
-                    // the uuid is enough to find them.
-                    let uuid = column_key.rsplit('|').next().unwrap_or(&column_key);
-                    let mut routes = Vec::new();
-                    for ((table_key, candidate), path) in type_link_data_path_by_table_column {
-                        if candidate == &column_key || candidate.contains(uuid) || table_key.contains(uuid) {
-                            routes.push(path.clone());
-                        }
-                    }
-                    routes.sort();
-                    routes.dedup();
-                    match routes.as_slice() {
-                        [path] => path.clone(),
-                        _ => return None,
-                    }
-                }
+            // `{1,<container>}`/`{1}` and other spellings name no table; the
+            // platform writes the chain physically.
+            match physical {
+                Some(path) => path,
+                None => return None,
             }
         };
         links.push(FormChoiceParameterLink::new(name, data_path, value_change));
