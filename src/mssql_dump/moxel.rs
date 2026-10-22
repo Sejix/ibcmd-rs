@@ -13708,7 +13708,12 @@ pub(super) fn push_moxel_print_settings_xml(xml: &mut String, settings: &MoxelPr
         "pagePlacementAlternation",
         settings.page_placement_alternation,
     );
-    push_moxel_format_usize(xml, "firstPageNumber", settings.first_page_number);
+    // `1` is the default and the platform omits the element for it.
+    push_moxel_format_usize(
+        xml,
+        "firstPageNumber",
+        settings.first_page_number.filter(|number| *number != 1),
+    );
     xml.push_str("\t</printSettings>\r\n");
 }
 
