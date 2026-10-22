@@ -80479,3 +80479,19 @@ fn form_root_read_only_uses_its_own_head_flag_and_native_xml_position() {
     unsupported[0] = "99";
     assert_eq!(extract_form_read_only(&unsupported), None);
 }
+
+#[test]
+#[ignore = "reproduces the МакетКарты82 graphical-scheme refusal; enable while fixing"]
+fn graphical_scheme_82_parses() {
+    use std::collections::{BTreeMap, BTreeSet};
+    let text = include_str!("fixtures/graphical_scheme_82.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let parsed = super::parse_business_process_flowchart_text_with_types(
+        text,
+        &BTreeMap::new(),
+        &BTreeMap::new(),
+        &BTreeMap::new(),
+        &BTreeSet::new(),
+    );
+    assert!(parsed.is_some(), "scheme 82 must parse");
+}
