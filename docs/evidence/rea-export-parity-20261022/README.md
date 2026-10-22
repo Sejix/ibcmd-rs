@@ -29,8 +29,8 @@ ibcmd-rs infobase config export --dbms=MSSQLServer --db-server=localhost `
 | Файлов у нативного | 1 961 |
 | Файлов у `ibcmd-rs` | 1 958 |
 | Общих | 1 958 |
-| Совпали побайтово (SHA-256) | **1 959** |
-| Различаются | **2** |
+| Совпали побайтово (SHA-256) | **1 960** |
+| Различаются | **1** |
 | Только у нативного | 0 |
 
 Раньше `ibcmd-rs` завершался с кодом −1:
@@ -52,7 +52,6 @@ ConfigDumpInfo has 1 entries without canonical routes
 | Файл | Только у нативного | Только у ibcmd-rs | Первое различие |
 |---|---|---|---|
 | `Reports\Gant1C\Templates\пмГант_Гант\Ext\Template.xml` | 368 | 1 | `<leftBorder>1</leftBorder>` |
-| `DataProcessors\РабочийСтолОбращенийТП\Templates\Обращение\Ext\Template.xml` | 2 | 1 | `<textColor>style:FieldTextColor</textColor>` |
 
 ## Что это значит
 

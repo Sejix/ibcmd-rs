@@ -11215,6 +11215,10 @@ pub(super) fn parse_moxel_web_color(value: &str) -> Option<String> {
         26 => "DarkGray",
         27 | 31 => "DarkGreen",
         33 => "DarkRed",
+        // `DataProcessors/РабочийСтолОбращенийТП/Templates/Обращение`
+        // publishes `d3p1:DarkSlateBlue`; the platform's own palette puts
+        // code `36` on that name.
+        36 => "DarkSlateBlue",
         37 => "DarkSlateGray",
         42 => "DimGray",
         44 => "FireBrick",
