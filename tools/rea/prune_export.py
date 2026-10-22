@@ -81,9 +81,19 @@ for kind, name in removed:
     if nested.is_dir():
         shutil.rmtree(nested)
 
-references = [f"{kind}.{name}" for kind, name in removed]
+references = {f"{kind}.{name}" for kind, name in removed}
+
+# Command-interface assets list objects by name inside their own structure;
+# dropping single lines would unbalance the XML. They are optional, so remove
+# the files whole.
+for asset in (dst / "Ext").glob("*.xml") if (dst / "Ext").is_dir() else []:
+    if "CommandInterface" in asset.name:
+        asset.unlink()
+
 for path in dst.rglob("*.xml"):
     if path.name in ("Configuration.xml", "ConfigDumpInfo.xml"):
+        continue
+    if "CommandInterface" in path.name:
         continue
     original = path.read_text(encoding="utf-8-sig")
     kept = [
@@ -94,7 +104,23 @@ for path in dst.rglob("*.xml"):
     if len(kept) != len(original.splitlines(keepends=True)):
         path.write_text("".join(kept), encoding="utf-8")
 
-print("removed", len(removed), "entries and their references")
+# The configuration's own properties may name a removed object
+# (`<DefaultStyle>Style.Стиль1</DefaultStyle>`). Empty such an element instead
+# of deleting the line: the property still has to exist.
+element = re.compile(r"^(?P<indent>\s*)<(?P<tag>[\w:]+)>\s*(?P<value>[^<]*?)\s*</(?P=tag)>\s*$")
+lines = config_path.read_text(encoding="utf-8").splitlines(keepends=True)
+rewritten = []
+changed = 0
+for line in lines:
+    match = element.match(line)
+    if match and match.group("value") in references:
+        rewritten.append(f"{match.group('indent')}<{match.group('tag')}/>\n")
+        changed += 1
+    else:
+        rewritten.append(line)
+config_path.write_text("".join(rewritten), encoding="utf-8")
+
+print("removed", len(removed), "entries and their references;", changed, "configuration properties emptied")
 
 # Usage:
 #   python tools/rea/prune_export.py <src-tree> <dst-tree> "Kind1,Kind2"
@@ -108,3 +134,12 @@ print("removed", len(removed), "entries and their references")
 # example DefaultStyle) are not rewritten yet, so pruning a referenced kind
 # stops import with "Неизвестный объект метаданных". That cleanup is the next
 # step in the import investigation.
+
+# Bisect status (Round 15):
+#   - minimal tree (Language only) imports AND applies: the XML route works
+#     once references are cleaned;
+#   - pruning a whole kind still leaves typed references in other objects
+#     ("Неизвестное имя типа - ChartOfCharacteristicTypesRef.X"), so the next
+#     step is dependency-aware pruning: remove the referrers (attributes,
+#     resources, subsystem items) together with the kind, or prune objects
+#     inside a kind instead of kinds.
