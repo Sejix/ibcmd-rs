@@ -8553,8 +8553,8 @@ impl FormTableSchema {
     const REFRESH_REQUEST_REVERSE_OFFSET: usize = 16;
 
     pub(crate) fn from_raw_layout(wrapper: &str, item_tag: &str, fields: &[&str]) -> Option<Self> {
-        let legacy = wrapper == "50";
-        let expected = if legacy { "50" } else { "55" };
+        let legacy = matches!(wrapper, "50" | "53");
+        let expected = if legacy { wrapper } else { "55" };
         if (!legacy && wrapper != "55")
             || item_tag != "Table"
             || fields.first().map(|field| field.trim()) != Some(expected)

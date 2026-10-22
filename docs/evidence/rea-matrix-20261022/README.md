@@ -1885,3 +1885,30 @@ Root-42-таблицы оставляю открытыми с готовым ign
 
 Следующий шаг: разобрать раскладку тега 53 (150 членов) — она больше
 современной, поэтому одной «заплаткой» не закрывается.
+
+### Раунд 121: тег 53 подключён — 388 → 13 строк в списковой форме
+
+Таблица root-48 (`{53,…}`, 150 членов) подключена к legacy-ветке:
+
+- `53` в `FORM_CHILD_ITEM_LEADING_MEMBERS`;
+- `"53" => Some("Table")`;
+- `FormTableSchema` принимает `wrapper == "53"` (legacy-ветка, как `50`);
+- табличные property-парсеры (`Representation` — слот 3, `CommandBarLocation` —
+  слот 8, `RowSelectionMode`, `FileDragMode`) принимают `50 | 53` на тех же
+  слотах.
+
+| Показатель | было | стало |
+|---|---|---|
+| Строк в `КнигаУчетаДоходовИРасходов/ФормаСписка` | 388 | **13** |
+| Таблиц в ней | 0 | **1** |
+| Размерных расхождений (файлов) | 643 | 643 |
+
+Файл ещё не совпал: остались 13 строк. Остаток — поздние слоты таблицы
+(`DefaultItem`, `InitialTreeView`, `EnableStartDrag`, `FileDragMode`,
+`RowPictureDataPath`, `ChoiceFoldersAndItems`, `ShowRoot`, `AllowRootChoice`) и
+пять наших лишних значений по умолчанию (`AutoMaxHeight`,
+`UseAlternationRowColorBWA`, `HorizontalStretch`, `GroupHorizontalAlign`,
+`GroupVerticalAlign`). Значит в записи на 150 членов есть вставка между ранними и
+поздними слотами; её и надо найти.
+
+Тесты 4071 (+1 ignored `root48_list_form_keeps_its_table`), расхождений 643.

@@ -14147,7 +14147,7 @@ fn parse_form_child_item_with_metadata_owners(
         } else {
             None
         },
-        row_selection_mode: if wrapper == "55" {
+        row_selection_mode: if matches!(wrapper, "55" | "50" | "53") {
             table_schema.and_then(|schema| schema.row_selection_mode(&fields))
         } else if tag == "Table" {
             if ordinary_table_layout {
@@ -21182,7 +21182,7 @@ pub(super) fn parse_form_table_representation_from_fields(
     fields: &[&str],
 ) -> Option<&'static str> {
     match wrapper {
-        "55" => fields
+        "55" | "50" | "53" => fields
             .get(3)
             .and_then(|field| parse_form_table_representation(field)),
         "73" => fields
@@ -21206,7 +21206,7 @@ pub(super) fn parse_form_table_command_bar_location(
     fields: &[&str],
 ) -> Option<&'static str> {
     match wrapper {
-        "55" => fields
+        "55" | "50" | "53" => fields
             .get(8)
             .and_then(|field| parse_form_table_command_bar_location_field(field)),
         _ => None,
@@ -21251,7 +21251,7 @@ pub(super) fn parse_form_table_file_drag_mode_from_fields(
     wrapper: &str,
     fields: &[&str],
 ) -> Option<&'static str> {
-    if wrapper == "55"
+    if matches!(wrapper, "55" | "50" | "53")
         && !form_table_wrapper55_uses_split_head_slots(fields)
         && fields.get(53).map(|field| field.trim()) == Some("0")
         && form_table_wrapper55_root_defaults(wrapper, fields)
@@ -22482,6 +22482,7 @@ pub(super) fn form_child_item_tag(wrapper: &str, fields: &[&str]) -> Option<&'st
         "73" => Some("Table"),
         "55" => Some("Table"),
         "50" => Some("Table"),
+        "53" => Some("Table"),
         _ => None,
     }
 }
@@ -22847,7 +22848,7 @@ fn form_braced_leading_member(field: &str) -> Option<(&str, u8)> {
 /// [`form_child_item_tag`] names, and the older revisions
 /// `form_item_record_canonical_revision` normalizes to one of them.
 const FORM_CHILD_ITEM_LEADING_MEMBERS: &[&str] = &[
-    "5", "6", "11", "12", "22", "29", "30", "31", "34", "35", "37", "48", "50", "54", "55", "73",
+    "5", "6", "11", "12", "22", "29", "30", "31", "34", "35", "37", "48", "50", "53", "54", "55", "73",
 ];
 
 /// Whether a member could be a child-item record, by its leading member.
