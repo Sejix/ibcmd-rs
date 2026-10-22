@@ -3,76 +3,26 @@
 | Показатель | Значение |
 |---|---|
 | Файлов у нативного | 94159 |
-| Файлов у нас | 94063 |
-| Совпали по имени | 94063 |
-| Различаются (размер или SHA-256) | 2111 |
-| Только у нативного | 96 |
+| Файлов у нас | 94092 |
+| Совпали по имени | 94092 |
+| Различаются (размер или SHA-256) | 1139 |
+| Только у нативного | 67 |
 | Только у нас | 0 |
 
-Из различающихся: по размеру — 2097, по содержимому при равном размере — 14.
+Из различающихся: по размеру — 1126, по содержимому при равном размере — 13.
 
 ## Различаются (первые 100)
+- `AccumulationRegisters\ВыпускПродукцииПоДаннымПродаж.xml`
 - `AccumulationRegisters\ВыпускПродукцииУслуг\Forms\ФормаСписка\Ext\Form.xml`
-- `AccumulationRegisters\ВыработкаОС.xml`
-- `AccumulationRegisters\ДанныеДляРасчетаСреднегоЗаработкаПоНачислениям.xml`
-- `AccumulationRegisters\ЗадолженностьСамозанятыхПоРеестру.xml`
-- `AccumulationRegisters\ИмущественныеВычетыНДФЛ.xml`
-- `AccumulationRegisters\ИПДоходы.xml`
-- `AccumulationRegisters\ИПИныеМатериальныеРасходы.xml`
-- `AccumulationRegisters\ИПМПЗ.xml`
-- `AccumulationRegisters\ИПМПЗОбороты.xml`
-- `AccumulationRegisters\ИПМПЗОтгруженные.xml`
-- `AccumulationRegisters\ИППрочиеДоходы.xml`
-- `AccumulationRegisters\ИППрочиеРасходы.xml`
-- `AccumulationRegisters\ИПРасходыНаОплатуТруда.xml`
-- `AccumulationRegisters\ИПРБП.xml`
-- `AccumulationRegisters\ИсчисленныеСтраховыеВзносы.xml`
-- `AccumulationRegisters\КнигаУчетаДоходовИРасходов.xml`
 - `AccumulationRegisters\КнигаУчетаДоходовИРасходов\Forms\ФормаСписка\Ext\Form.xml`
 - `AccumulationRegisters\КнигаУчетаДоходовИРасходовНМА\Forms\ФормаСписка\Ext\Form.xml`
 - `AccumulationRegisters\КнигаУчетаДоходовИРасходовОС\Forms\ФормаСписка\Ext\Form.xml`
 - `AccumulationRegisters\КнигаУчетаДоходовИРасходовРаздел4\Forms\ФормаСписка\Ext\Form.xml`
 - `AccumulationRegisters\КнигаУчетаДоходовИРасходовРаздел5\Forms\ФормаСписка\Ext\Form.xml`
 - `AccumulationRegisters\КнигаУчетаДоходовПатент\Forms\ФормаСписка\Ext\Form.xml`
-- `AccumulationRegisters\НачисленияУдержанияПоСотрудникам.xml`
-- `AccumulationRegisters\НачисленияУдержанияПоСотрудникамАвансом.xml`
-- `AccumulationRegisters\НДСЗаписиКнигиПокупок.xml`
 - `AccumulationRegisters\НДСЗаписиКнигиПокупок\Ext\Help\ru.html`
-- `AccumulationRegisters\НДСЗаписиКнигиПродаж.xml`
 - `AccumulationRegisters\НДСЗаписиКнигиПродаж\Ext\Help\ru.html`
-- `AccumulationRegisters\НДСЗаписиРаздела7Декларации.xml`
-- `AccumulationRegisters\НДСНачисленный.xml`
-- `AccumulationRegisters\НДСПоПриобретеннымЦенностям.xml`
-- `AccumulationRegisters\НДСПредъявленныйРеализация0.xml`
-- `AccumulationRegisters\НДСРаздельныйУчет.xml`
-- `AccumulationRegisters\НДСРеализация0.xml`
-- `AccumulationRegisters\НДФЛКПеречислению.xml`
-- `AccumulationRegisters\НДФЛПеречисленный.xml`
-- `AccumulationRegisters\ОстаткиАлкогольнойПродукцииЕГАИС.xml`
-- `AccumulationRegisters\ОтложенныеКурсовыеРазницы.xml`
-- `AccumulationRegisters\ОтработанноеВремяПоСотрудникам.xml`
-- `AccumulationRegisters\ОтработанноеВремяПоСотрудникамАвансом.xml`
-- `AccumulationRegisters\ОценочныеОбязательства.xml`
-- `AccumulationRegisters\ПособияПоСоциальномуСтрахованию.xml`
-- `AccumulationRegisters\ПособияПоУходуЗаРебенком.xml`
-- `AccumulationRegisters\ПредоставленныеСтандартныеИСоциальныеВычетыНДФЛ.xml`
-- `AccumulationRegisters\ПрослеживаемыеТовары.xml`
-- `AccumulationRegisters\ПрослеживаемыеТоварыОтгруженныеВЕАЭС.xml`
-- `AccumulationRegisters\ПрочиеРасчеты.xml`
-- `AccumulationRegisters\РазметкаАУСН.xml`
-- `AccumulationRegisters\РасходыАУСН.xml`
-- `AccumulationRegisters\РасходыНаОнлайнКассыУменьшающиеНалоги.xml`
-- `AccumulationRegisters\РасходыНаПлатон.xml`
-- `AccumulationRegisters\РасходыПриУСН.xml`
-- `AccumulationRegisters\РасчетыНалогоплательщиковСБюджетомПоНДФЛ.xml`
-- `AccumulationRegisters\РасчетыНДФЛАУСН.xml`
-- `AccumulationRegisters\РеализацияУслуг.xml`
 - `AccumulationRegisters\РеализацияУслуг\Ext\Help\ru.html`
-- `AccumulationRegisters\СведенияОДоходахНДФЛ.xml`
-- `AccumulationRegisters\СведенияОДоходахСтраховыеВзносы.xml`
-- `AccumulationRegisters\СтраховыеВзносыПоФизическимЛицам.xml`
-- `AccumulationRegisters\УменьшениеНалогаНаСтраховыеВзносыИП.xml`
-- `BusinessProcesses\Задание.xml`
 - `BusinessProcesses\ЗаявкаСотрудникаИзменитьЛичныеДанные\Forms\ДействиеВыполнить\Ext\Form.xml`
 - `BusinessProcesses\ЗаявкаСотрудникаНалоговыйВычет\Forms\ДействиеВыполнить\Ext\Form.xml`
 - `BusinessProcesses\ЗаявкаСотрудникаОтпуск\Forms\ДействиеВыполнить\Ext\Form.xml`
@@ -83,14 +33,11 @@
 - `BusinessProcesses\УдалитьЗаявкаКабинетСотрудника\Forms\ДействиеВыполнить\Ext\Form.xml`
 - `Catalogs\Банки\Forms\ФормаВыбораГруппы\Ext\Form.xml`
 - `Catalogs\БанковскиеСчета\Forms\ФормаЭлементаЦифровойСчет\Ext\Form.xml`
-- `Catalogs\ВидыАлкогольнойПродукции.xml`
-- `Catalogs\ВидыВычетовНДФЛ.xml`
 - `Catalogs\ВидыДеятельностиЕНВД\Forms\ВмененныйДоход\Ext\Form.xml`
 - `Catalogs\ВидыДеятельностиЕНВД\Forms\ФормаВыбора\Ext\Form.xml`
 - `Catalogs\ВидыДеятельностиЕНВД\Forms\ФормаВыбораПричиныЗаявления\Ext\Form.xml`
 - `Catalogs\ВидыДеятельностиПредпринимателей\Forms\ФормаВыбора\Ext\Form.xml`
 - `Catalogs\ВидыДокументовЭДОБЗК\Forms\ФормаВыбораПубликуемыхСотрудников\Ext\Form.xml`
-- `Catalogs\ВидыДоходовНДФЛ.xml`
 - `Catalogs\ВидыНалоговИПлатежейВБюджет\Templates\АдминистраторыДоходовБюджетов\Ext\Template.xml`
 - `Catalogs\ВидыНалоговИПлатежейВБюджет\Templates\КлассификацияДоходовБюджетов\Ext\Template.xml`
 - `Catalogs\ВидыНалоговИПлатежейВБюджет\Templates\КлассификацияДоходовБюджетов2026\Ext\Template.xml`
@@ -99,27 +46,78 @@
 - `Catalogs\ВидыОплатОрганизаций\Forms\ФормаВыбораГруппы\Ext\Form.xml`
 - `Catalogs\ВидыОтправляемыхДокументов\Forms\ФормаВыбора\Ext\Form.xml`
 - `Catalogs\ВидыРегистровУчета\Forms\ФормаСписка\Ext\Form.xml`
-- `Catalogs\Гостиницы.xml`
-- `Catalogs\ДанныеДляОформленияНаРаботуПрисоединенныеФайлы.xml`
-- `Catalogs\ДанныеСФРДляРасчетаПособияПрисоединенныеФайлы.xml`
 - `Catalogs\ДенежныеДокументы\Forms\ФормаВыбора\Ext\Form.xml`
 - `Catalogs\ДенежныеДокументы\Forms\ФормаВыбораГруппы\Ext\Form.xml`
-- `Catalogs\ДоверенностиНалогоплательщика.xml`
 - `Catalogs\ДоверенностиНалогоплательщика\Templates\ПФ_MXL_Доверенность\Ext\Template.xml`
+- `Catalogs\ДоговорыКонтрагентов.xml`
 - `Catalogs\ДоговорыКонтрагентов\Forms\ОтправкаДокументовПоЭлектроннойПочте\Ext\Form.xml`
 - `Catalogs\ДоговорыКонтрагентов\Forms\ФормаПечатиЭлектронногоФормата\Ext\Form.xml`
 - `Catalogs\ДоговорыКонтрагентов\Forms\ФормаРедактированияТекстаДоговора\Ext\Form.xml`
-- `Catalogs\ДокументыРеализацииПолномочийНалоговыхОрганов.xml`
 - `Catalogs\ДокументыРеализацииПолномочийНалоговыхОрганов\Forms\ВопросПроОбязательностьЭДО\Ext\Form.xml`
 - `Catalogs\ДокументыРеализацииПолномочийНалоговыхОрганов\Forms\ФормаВыбора\Ext\Form.xml`
+- `Catalogs\ДокументыРеализацииПолномочийНалоговыхОрганов\Forms\ФормаВыбораТребования\Ext\Form.xml`
+- `Catalogs\ДокументыРеализацииПолномочийНалоговыхОрганов\Forms\ФормаОтправкиРезультатаПриема\Ext\Form.xml`
+- `Catalogs\ДокументыРеализацииПолномочийНалоговыхОрганов\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\Должности\Forms\ФормаЭлемента\Ext\Form.xml`
+- `Catalogs\ЕдиныеНормыАмортизационныхОтчисленийОсновныхФондов\Forms\ФормаВыбора\Ext\Form.xml`
+- `Catalogs\ЕдиныеНормыАмортизационныхОтчисленийОсновныхФондов\Forms\ФормаВыбораГруппы\Ext\Form.xml`
+- `Catalogs\ЕдиныеНормыАмортизационныхОтчисленийОсновныхФондов\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\ЗаявлениеОНазначенииПенсии\Forms\ВоеннаяСлужба\Ext\Form.xml`
+- `Catalogs\ЗаявлениеОНазначенииПенсии\Forms\ВыборВидаПенсии\Ext\Form.xml`
+- `Catalogs\ЗаявлениеОНазначенииПенсии\Forms\Дети\Ext\Form.xml`
+- `Catalogs\ЗаявлениеОНазначенииПенсии\Forms\ИнвалидыПожилые\Ext\Form.xml`
+- `Catalogs\ЗаявлениеОНазначенииПенсии\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\КлассификаторВидовПредпринимательскойДеятельностиЕНВД\Forms\ФормаВыбора\Ext\Form.xml`
+- `Catalogs\КлассификаторВидовПредпринимательскойДеятельностиЕНВД\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\КлассификаторВидовЭкономическойДеятельности\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\КлассификаторЕдиницИзмерения\Forms\ФормаВыбораИзКлассификатора\Ext\Form.xml`
+- `Catalogs\КлассификаторОКВЭД2\Forms\ФормаЭлемента\Ext\Form.xml`
+- `Catalogs\КлассификаторОКПД2\Forms\ФормаЭлемента\Ext\Form.xml`
+- `Catalogs\КлассификаторПродукцииПоВидамДеятельности\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\КлассификаторУслугНаселению\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\КодыОперацийРаздела7ДекларацииПоНДС\Forms\ФормаЭлемента\Ext\Form.xml`
+- `Catalogs\КонтактныеЛица\Forms\ФормаЛиды\Ext\Form.xml`
+- `Catalogs\Контрагенты\Forms\ФормаНовогоЭлемента\Ext\Form.xml`
+- `Catalogs\КонтрольныеЗнакиГИСМ\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\МакетыПенсионныхДел\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\МобильныеПриложенияРаспознаванияДокументов\Forms\ФормаЭлемента\Ext\Form.xml`
+- `Catalogs\НаборыДополнительныхРеквизитовИСведений\Forms\ФормаВыбора\Ext\Form.xml`
+- `Catalogs\НалоговыеОрганы\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\НастройкиИнтеграцииМаркетплейс\Forms\ФормаЭлемента\Ext\Form.xml`
+- `Catalogs\Номенклатура.xml`
+- `Catalogs\Номенклатура\Forms\ФормаВыбораГруппы\Ext\Form.xml`
+- `Catalogs\Номенклатура\Forms\ФормаИсторияДвижений\Ext\Form.xml`
+- `Catalogs\Номенклатура\Forms\ФормаТовары\Ext\Form.xml`
+- `Catalogs\НоменклатураПоставщиков\Forms\ФормаВыбора\Ext\Form.xml`
+- `Catalogs\НоменклатураПоставщиков\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\НоменклатурныеГруппы\Forms\ФормаВыбораГруппы\Ext\Form.xml`
+- `Catalogs\НомераГТД\Forms\ФормаВыбораГруппы\Ext\Form.xml`
+- `Catalogs\НомераГТД\Forms\ФормаВыбораПоОстаткам\Ext\Form.xml`
+- `Catalogs\ОбщероссийскийКлассификаторОсновныхФондов\Forms\ФормаВыбора\Ext\Form.xml`
+- `Catalogs\ОбщероссийскийКлассификаторОсновныхФондов\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\ОбщероссийскийКлассификаторПродукции\Forms\ФормаВыбора\Ext\Form.xml`
+- `Catalogs\ОбщероссийскийКлассификаторПродукции\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\ОбъектыСтатистическогоНаблюдения\Forms\ФормаЭлемента\Ext\Form.xml`
+- `Catalogs\ОбъектыСтроительства\Forms\ФормаВыбораГруппы\Ext\Form.xml`
+- `Catalogs\ОписиВходящихДокументовИзНалоговыхОрганов\Forms\ФормаВыбора\Ext\Form.xml`
+- `Catalogs\ОписиВходящихДокументовИзНалоговыхОрганов\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\ОписиИсходящихДокументовВНалоговыеОрганы\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\ОписиИсходящихДокументовВНалоговыеОрганы\Forms\ФормаЭлемента\Ext\Form.xml`
+- `Catalogs\Организации.xml`
+- `Catalogs\ОрганыФСГС\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\ОснованияФинансирования.xml`
+- `Catalogs\ОсновныеСредства\Forms\ФормаВыбораАмортизационнойГруппы\Ext\Form.xml`
+- `Catalogs\ОсновныеСредства\Forms\ФормаВыбораГруппы\Ext\Form.xml`
+- `Catalogs\ОтправкиМинобороны\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\ОтправкиОтчетности\Forms\ФормаЭлемента\Ext\Form.xml`
+- `Catalogs\ОтправкиРПН\Forms\ФормаСписка\Ext\Form.xml`
+- `Catalogs\ОтправкиФТС\Forms\ФормаСписка\Ext\Form.xml`
 
 ## Только у нативного (первые 100)
 - `Catalogs\СпецификацииНоменклатуры.xml`
 - `Catalogs\СписокСтатейЗатратВключенныхВБазуРаспределенияКосвенныхРасходов.xml`
-- `ChartsOfCalculationTypes\УдалитьОсновныеНачисленияОрганизаций.xml`
 - `ChartsOfCalculationTypes\УдалитьОсновныеНачисленияОрганизаций\Ext\Predefined.xml`
 - `ChartsOfCalculationTypes\Удержания.xml`
-- `ChartsOfCharacteristicTypes\УдалитьНастройкиПользователей.xml`
 - `CommonForms\НастройкаПечатиКонвертов\Ext\Form.xml`
 - `Constants\ВестиУчетПоПодразделениям.xml`
 - `Constants\ИспользоватьУведомленияОКонтролируемыхСделках.xml`
@@ -130,48 +128,23 @@
 - `DataProcessors\НачалоРаботы\Forms\ЗачемУказыватьИНН\Ext\Form\Items\Декорация2\Picture.png`
 - `DataProcessors\НачалоРаботы\Forms\ЗачемУказыватьИНН\Ext\Form\Items\Декорация3\Picture.png`
 - `DataProcessors\РегистрацияОрганизации\Forms\ФормаХочуКонсультацию\Ext\Form\Items\КартинкаУжеЗвоним\Picture.png`
-- `Documents\АвансовыйОтчет.xml`
-- `Documents\ВозвратТоваровОтПокупателя.xml`
-- `Documents\ВозвратТоваровПоставщику.xml`
 - `Documents\ВосстановлениеНДСПоОбъектамНедвижимости.xml`
 - `Documents\ВыгрузкаРегламентированныхОтчетов.xml`
 - `Documents\ВыдачаДенежныхДокументов.xml`
 - `Documents\Доверенность.xml`
-- `Documents\ИзменениеУсловийАренды.xml`
 - `Documents\ИнвентаризацияРасчетовСКонтрагентами.xml`
 - `Documents\ИнвентаризацияТоваровНаСкладе.xml`
 - `Documents\КомплектацияНоменклатуры.xml`
-- `Documents\ОперацияБух.xml`
 - `Documents\ОприходованиеТоваров.xml`
 - `Documents\ОтражениеНачисленияНДС.xml`
 - `Documents\ОтражениеНДСКВычету.xml`
-- `Documents\ОтчетКомиссионераОПродажах.xml`
 - `Documents\ОтчетКомитентуОПродажах.xml`
-- `Documents\ОтчетОРозничныхПродажах.xml`
 - `Documents\ПакетОбменСБанками.xml`
-- `Documents\ПеремещениеТоваров.xml`
 - `Documents\ПереоценкаТоваровВРознице.xml`
-- `Documents\ПоступлениеВАренду.xml`
 - `Documents\ПоступлениеДенежныхДокументов.xml`
-- `Documents\ПоступлениеНаРасчетныйСчет.xml`
-- `Documents\ПоступлениеТоваровУслуг.xml`
-- `Documents\ПрекращениеАренды.xml`
-- `Documents\ПриходныйКассовыйОрдер.xml`
-- `Documents\РасходныйКассовыйОрдер.xml`
-- `Documents\РеализацияОтгруженныхТоваров.xml`
-- `Documents\РеализацияТоваровУслуг.xml`
-- `Documents\РегламентнаяОперация.xml`
-- `Documents\СписаниеСРасчетногоСчета.xml`
 - `Documents\СписаниеТоваров.xml`
-- `Documents\СчетФактураВыданный.xml`
 - `Documents\СчетФактураПолученный.xml`
 - `Documents\УстановкаЦенНоменклатуры.xml`
-- `Documents\ФормированиеЗаписейКнигиПокупок.xml`
-- `EventSubscriptions\АвтономнаяРаботаРегистрацияКонстанты.xml`
-- `EventSubscriptions\ПереопределитьПолучаемуюФормуСпискаСОжиданием.xml`
-- `EventSubscriptions\ПолныйРегистрацияКонстанты.xml`
-- `EventSubscriptions\ПоОрганизацииРегистрацияКонстанты.xml`
-- `EventSubscriptions\ПроверитьВозможностьВключенияФункциональностиПоТарифу.xml`
 - `ExchangePlans\МобильноеПриложениеПредприниматель\Forms\ФормаСинхронизацииСМобильнымПриложением\Ext\Form\Items\ДекорацияСкриншот\Picture.png`
 - `ExchangePlans\ОбменЗарплата3Бухгалтерия3\Forms\ПодробнаяИнформация\Ext\Form\Module.bsl`
 - `ExchangePlans\ОбменРозницаБухгалтерияПредприятия30\Forms\ПодробнаяИнформация.xml`
@@ -208,6 +181,4 @@
 - `Roles\ЧтениеКурсовВалют\Ext\Rights.xml`
 - `Roles\ЧтениеСкладов\Ext\Rights.xml`
 - `Roles\ЧтениеСтатейДвиженияДенежныхСредств\Ext\Rights.xml`
-- `StyleItems\ПоясняющийПроблемуТекст.xml`
-- `StyleItems\СтатусДанныеЗагружены.xml`
 
