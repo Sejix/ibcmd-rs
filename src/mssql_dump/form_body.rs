@@ -16948,8 +16948,7 @@ fn parse_form_control_color_space(
             .trim()
             .parse::<i32>()
             .ok()
-            .and_then(form_control_web_color_name)
-            .map(ToOwned::to_owned),
+            .and_then(form_control_web_color_name),
         "3" if payload.len() == 1 => payload
             .first()?
             .trim()
@@ -17075,53 +17074,8 @@ fn form_control_window_color_name(code: i32) -> Option<&'static str> {
 /// override. The five it adds are the ones neither table carried:
 /// `14`/`91`/`106`/`122`/`132`. An unmapped code declines the whole colour, so
 /// each of them cost the element outright.
-fn form_control_web_color_name(code: i32) -> Option<&'static str> {
-    match code {
-        1 => Some("web:AliceBlue"),       // 6
-        6 => Some("web:Beige"),           // 7
-        14 => Some("web:CadetBlue"),      // 1
-        30 => Some("web:DarkOliveGreen"), // 3
-        31 => Some("web:DarkOrange"),     // 2
-        41 => Some("web:DeepSkyBlue"),    // 1
-        42 => Some("web:DimGray"),        // 22
-        43 => Some("web:DodgerBlue"),     // 1
-        57 => Some("web:IndianRed"),      // 1
-        70 => Some("web:LightGreen"),     // 15
-        75 => Some("web:LightSkyBlue"),   // 1
-        // Монитор `DataProcessors/НастройкаМониторинг/Forms/Форма`.
-        81 => Some("web:LimeGreen"),
-        91 => Some("web:MediumSeaGreen"), // 6
-        // 1C:Документооборот `Documents/Отсутствие/Forms/ФормаДокумента`
-        // `ЗаместителиТекст` holds `{3,2,{125}}` and writes `web:Seagreen`.
-        125 => Some("web:Seagreen"),
-        100 => Some("web:NavajoWhite"), // 2
-        106 => Some("web:OrangeRed"),   // 2
-        109 => Some("web:PaleGreen"),   // 5
-        115 => Some("web:Pink"),        // 4
-        122 => Some("web:SaddleBrown"), // 20
-        132 => Some("web:Snow"),        // 2
-        143 => Some("web:White"),       // 12
-        // Three codes the same join names that neither this table nor the
-        // shared style palette behind it answers. Re-run over the dumped item
-        // layouts of all seven stand corpora that carry forms, item by item
-        // rather than file by file, the pairing produces 46 distinct codes with
-        // no ambiguity, reproduces every code the two tables already answer --
-        // 43 of them, index for index, including the `31` override -- and
-        // leaves exactly these three unanswered. Each cost the element
-        // outright: ERP УХ
-        // `DataProcessors/ДокументооборотСКонтролирующимиОрганами/Forms/
-        // Мастер_ПаспортныеДанные` writes `<TextColor>web:LightSalmon</...>` on
-        // its `КраснаяРазделительнаяЛиния` label decoration and
-        // `<BorderColor>web:LightSalmon</...>` on its `Силуэт` picture
-        // decoration; `DataProcessors/АналитическийБланкСводнаяТаблица/Forms/
-        // ФормаМакетаСводнаяТаблица` writes `web:Lime`; and
-        // `Documents/ЗаказНаПроизводство2_2/Forms/ФормаДокумента` writes
-        // `web:PapayaWhip`.
-        73 => Some("web:LightSalmon"), // 2
-        80 => Some("web:Lime"),        // 1
-        112 => Some("web:PapayaWhip"), // 2
-        _ => style_web_color_name(code),
-    }
+fn form_control_web_color_name(code: i32) -> Option<String> {
+    crate::compiler::bodies::form_native::web_color_name(code).map(|name| format!("web:{name}"))
 }
 
 pub(super) fn parse_form_label_decoration_options(

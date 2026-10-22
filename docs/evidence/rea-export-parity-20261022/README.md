@@ -29,8 +29,8 @@ ibcmd-rs infobase config export --dbms=MSSQLServer --db-server=localhost `
 | Файлов у нативного | 1 961 |
 | Файлов у `ibcmd-rs` | 1 958 |
 | Общих | 1 958 |
-| Совпали побайтово (SHA-256) | **1 946** |
-| Различаются | **12** |
+| Совпали побайтово (SHA-256) | **1 949** |
+| Различаются | **9** |
 | Только у нативного | 3 (включая `ConfigDumpInfo.xml`) |
 
 `ibcmd-rs` завершился с кодом −1:
@@ -54,9 +54,6 @@ ConfigDumpInfo has 1 entries without canonical routes
 | `DataProcessors\РабочийСтолОбращенийТП\Templates\Обращение\Ext\Template.xml` | 2 | 1 | `<textColor>style:FieldTextColor</textColor>` |
 | `DataProcessors\ТелеграмОбновлениеВерсии.xml` | 4 | 4 | `<xr:Ref>0:3b2a508b-…</xr:Ref>` |
 | `Subsystems\Проекты.xml` | 1 | 1 | ссылка на таблицу внешнего источника: у нативного UUID, у нас `ExternalDataSource.…Table.…` |
-| `CommonForms\ОбщиеНастройки\Ext\Form.xml` | 2 | 0 | `<TextColor>web:Olive</TextColor>` |
-| `Catalogs\ФизическиеЛица\Forms\ФормаЭлемента\Ext\Form.xml` | 1 | 0 | `<TextColor>web:Olive</TextColor>` |
-| `DataProcessors\СтартовыйПомощник\Forms\Форма\Ext\Form.xml` | 1 | 0 | `<TextColor>web:Olive</TextColor>` |
 | `Catalogs\узСпринты\Forms\ФормаЭлемента\Ext\Form.xml` | 1 | 0 | `<MainTable>1:33ee2945-…</MainTable>` |
 | `DataProcessors\БотТелеграм\Forms\Форма\Ext\Form.xml` | 1 | 0 | `<TitleDataPath>1/0:dff8c7e9-…/100000000</TitleDataPath>` |
 | `Documents\ОбращениеВПоддержку\Forms\ФормаДокумента\Ext\Form.xml` | 1 | 0 | `<Output>Enable</Output>` |
