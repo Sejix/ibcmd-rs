@@ -13162,6 +13162,18 @@ fn parse_form_child_item_with_metadata_owners(
             .collect::<Vec<_>>()
     });
     let fields = normalized_fields.as_deref().unwrap_or(&raw_fields);
+    // The root-48 table record carries one extra member at 15 relative to the
+    // layout the table properties are calibrated on; dropping it aligns every
+    // later forward slot (DefaultItem 16, InitialTreeView 39, EnableStartDrag
+    // 52).
+    let legacy_table_trimmed = (fields.first().map(|field| field.trim()) == Some("53")
+        && fields.len() > 15)
+        .then(|| {
+            let mut trimmed = fields.to_vec();
+            trimmed.remove(15);
+            trimmed
+        });
+    let fields = legacy_table_trimmed.as_deref().unwrap_or(fields);
     let identity = split_1c_braced_fields(fields.get(1)?.trim(), 0)?;
     let id = identity.first()?.trim();
     // A Gantt chart's own nested table may carry id `0`: 1C:Документооборот
