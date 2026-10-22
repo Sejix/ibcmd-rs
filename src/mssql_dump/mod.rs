@@ -8252,7 +8252,21 @@ fn parse_flowchart_font_tuple(text: &str) -> Option<FlowchartFont> {
             // weight at member 4; the trailing member is a flag. Both the
             // five-member `{6,3,2,100,1}` and six-member
             // `{6,3,6,120,700,1}` spellings occur.
-            if fields.first()?.trim() == "6" && matches!(fields.len(), 5 | 6) {
+            // The sized form comes under both markers (`{6,…}` and `{7,…}`)
+            // and in two lengths; the sizeless `{7,3,0,1,100}` is told apart by
+            // its own fixed members, not by the marker.
+            if matches!(fields.len(), 5 | 6) {
+                if fields.len() == 5
+                    && fields.get(2)?.trim() == "0"
+                    && fields.get(3)?.trim() == "1"
+                    && fields.get(4)?.trim() == "100"
+                {
+                    return Some(FlowchartFont {
+                        reference: String::new(),
+                        kind: "AutoFont",
+                        ..FlowchartFont::default()
+                    });
+                }
                 let tenths = fields.get(3)?.trim().parse::<i64>().ok()?;
                 let weight = fields.get(4)?.trim().parse::<i64>().ok()?;
                 let height = format!("{}", tenths / 10);
