@@ -18,6 +18,12 @@ pub(crate) const TABLE_RECORD_CODE: &str = "11";
 /// The field collection id the platform stores.
 pub(crate) const FIELD_COLLECTION: &str = "c7075688-01c1-41ba-bd1c-1023c8189079";
 
+/// Type id of the `<KeyFields>` reference list.
+pub(crate) const KEY_FIELD_REF_TYPE: &str = "157fa490-4ce9-11d4-9415-008048da11f9";
+
+/// Type id of the `<InputByString>` reference list.
+pub(crate) const INPUT_BY_STRING_REF_TYPE: &str = "60ea359f-3a6e-48bb-8e71-d2a457572918";
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FieldRecord {
     pub uuid: String,
@@ -41,6 +47,11 @@ pub(crate) struct TableRecord {
     /// Generated type pairs in stored order (the XML order differs).
     pub generated: Vec<(String, String)>,
     pub fields: Vec<FieldRecord>,
+    /// `<KeyFields>`: names of the key fields, resolved from the typed
+    /// reference list (`157fa490-…`).
+    pub key_fields: Vec<String>,
+    /// `<InputByString>`: names in the typed reference list `60ea359f-…`.
+    pub input_by_string: Vec<String>,
 }
 
 pub(crate) fn parse(text: &str) -> Result<TableRecord> {
@@ -100,6 +111,29 @@ pub(crate) fn from_brace(row: &Brace) -> Result<TableRecord> {
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default();
+    let field_names = fields
+        .iter()
+        .map(|field| (field.uuid.as_str(), field.name.as_str()))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    let resolve = |ids: Vec<String>| {
+        ids.into_iter()
+            .filter_map(|id| field_names.get(id.as_str()).map(|name| (*name).to_string()))
+            .collect::<Vec<_>>()
+    };
+    let mut key_fields = Vec::new();
+    let mut input_by_string = Vec::new();
+    for node in body.iter().skip(2) {
+        if let Some(ids) = typed_ref_list(node, KEY_FIELD_REF_TYPE) {
+            key_fields = resolve(ids);
+        }
+    }
+    // `InputByString` is stored one level deeper, inside a `{1,…}` wrapper.
+    if let Some(ids) = find_typed_ref_list(
+        &Brace::List(body.to_vec()),
+        INPUT_BY_STRING_REF_TYPE,
+    ) {
+        input_by_string = resolve(ids);
+    }
     Ok(TableRecord {
         uuid: head.uuid,
         name: head.name,
@@ -107,7 +141,47 @@ pub(crate) fn from_brace(row: &Brace) -> Result<TableRecord> {
         comment: head.comment,
         generated,
         fields,
+        key_fields,
+        input_by_string,
     })
+}
+
+/// A `{0,<count>,{"#",<type>,{<kind>,<uuid>}}…}` reference list of `type`.
+fn typed_ref_list(node: &Brace, type_id: &str) -> Option<Vec<String>> {
+    let items = list(node).ok()?;
+    if items.first().and_then(Brace::as_atom) != Some("0") {
+        return None;
+    }
+    let mut identities = Vec::new();
+    for entry in items.iter().skip(2) {
+        let typed = list(entry).ok()?;
+        if typed.first().and_then(Brace::as_str) != Some("#") {
+            return None;
+        }
+        if typed.get(1).and_then(Brace::as_atom) != Some(type_id) {
+            return None;
+        }
+        let inner = list(typed.get(2)?).ok()?;
+        identities.push(inner.get(1).and_then(Brace::as_atom)?.to_string());
+    }
+    if identities.is_empty() {
+        // An empty `{0,0,…}` list of the same shape is not the property.
+        return None;
+    }
+    Some(identities)
+}
+
+fn find_typed_ref_list(node: &Brace, type_id: &str) -> Option<Vec<String>> {
+    if let Some(identities) = typed_ref_list(node, type_id) {
+        return Some(identities);
+    }
+    let items = list(node).ok()?;
+    for child in items {
+        if let Some(identities) = find_typed_ref_list(child, type_id) {
+            return Some(identities);
+        }
+    }
+    None
 }
 
 fn field_record(entry: &Brace) -> Result<FieldRecord> {
@@ -159,11 +233,7 @@ const XML_ORDER: &[(&str, usize)] = &[
 ];
 
 /// The object element of the table file.
-pub(crate) fn to_element(
-    table: &TableRecord,
-    owner: &str,
-    key_fields: &[String],
-) -> Result<Element> {
+pub(crate) fn to_element(table: &TableRecord, owner: &str) -> Result<Element> {
     let full = format!("ExternalDataSource.{owner}.Table.{}", table.name);
     let mut internal = el("InternalInfo");
     for (category, stored) in XML_ORDER {
@@ -189,7 +259,7 @@ pub(crate) fn to_element(
     Ok(el("Table")
         .attr("uuid", &table.uuid)
         .child(internal)
-        .child(table_properties(table, &full, key_fields)?)
+        .child(table_properties(table, &full)?)
         .child(el("ChildObjects").children(fields)))
 }
 
@@ -200,11 +270,7 @@ fn key_field_elements(full: &str, key_fields: &[String]) -> Vec<Element> {
         .collect()
 }
 
-fn table_properties(
-    table: &TableRecord,
-    full: &str,
-    key_fields: &[String],
-) -> Result<Element> {
+fn table_properties(table: &TableRecord, full: &str) -> Result<Element> {
     Ok(el("Properties")
         .child(leaf("Name", &table.name))
         .child(localized_element("Synonym", &table.synonym)?)
@@ -213,14 +279,14 @@ fn table_properties(
         .child(leaf("NameInDataSource", &table.name))
         .child(leaf("ExpressionInDataSource", ""))
         .child(leaf("TableDataType", "ObjectData"))
-        .child(el("KeyFields").children(key_field_elements(full, key_fields)))
+        .child(el("KeyFields").children(key_field_elements(full, &table.key_fields)))
         .child(leaf("PresentationField", ""))
         .child(leaf("ParentField", ""))
         .child(el("UnfilledParentValue").attr("nil", "true"))
         .child(leaf("Characteristics", ""))
         .child(leaf("UseStandardCommands", "true"))
         .child(leaf("QuickChoice", "false"))
-        .child(el("InputByString").children(key_field_elements(full, key_fields)))
+        .child(el("InputByString").children(key_field_elements(full, &table.input_by_string)))
         .child(leaf("CreateOnInput", "Auto"))
         .child(leaf("SearchStringModeOnInputByString", "Begin"))
         .child(leaf("ChoiceDataGetModeOnInputByString", "Directly"))
@@ -374,13 +440,14 @@ mod tests {
         assert_eq!(table.fields[1].name_in_source, "1c_id");
         assert_eq!(table.fields[1].pattern, vec!["S", "255", "1"]);
         assert_eq!(table.comment, "");
+        assert_eq!(table.key_fields, vec!["product_id".to_string()]);
+        assert_eq!(table.input_by_string, vec!["product_id".to_string()]);
     }
 
     #[test]
     fn writes_the_table_structure_in_the_platforms_order() {
         let table = parse(ROW).expect("a table row");
-        let keys = vec!["product_id".to_string()];
-        let element = to_element(&table, "ВнешнийИсточникДанных1", &keys).expect("an element");
+        let element = to_element(&table, "ВнешнийИсточникДанных1").expect("an element");
         assert_eq!(element.name, "Table");
         assert_eq!(attribute(&element, "uuid"), Some(table.uuid.as_str()));
         let sections = element
