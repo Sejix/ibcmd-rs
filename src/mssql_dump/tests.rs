@@ -80782,3 +80782,16 @@ fn root42_form_resolves_its_commands() {
     );
     assert!(xml.contains("<CommandName>Form.Command.ПроверитьШаблон</CommandName>"), "{raw}");
 }
+
+#[test]
+#[ignore = "reproduces dropped tag-50 tables on a root-42 form"]
+fn root42_form_keeps_its_tables() {
+    use std::collections::BTreeMap;
+    let text = include_str!("fixtures/form_root42_commands.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let body = crate::module_blob::parse_form_body_plain(text).expect("body parses");
+    let xml = super::extract_form_body_xml_from_body(&body, &BTreeMap::new(), &BTreeMap::new())
+        .expect("xml");
+    eprintln!("tables: {}", xml.matches("<Table ").count());
+    assert!(xml.contains("<Table name=\"ПоляДорожки1\""), "{}", xml.matches("<Table ").count());
+}
