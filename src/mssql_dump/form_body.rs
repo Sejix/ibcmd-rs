@@ -2273,6 +2273,8 @@ pub(super) enum FormSchemaWriteError {
         reason: &'static str,
         /// The first characters of the primary member, for diagnosis.
         primary_head: String,
+        /// The first characters of the mirrored member, for diagnosis.
+        duplicate_head: String,
     },
     OpaqueChoiceParameterAvailableTypes {
         slot: usize,
@@ -2437,6 +2439,13 @@ fn validate_form_choice_list_writer_rules(
                         reason: form_choice_parameter_links_parse_error_class(&value.error),
                         primary_head: value
                             .primary_raw
+                            .as_deref()
+                            .unwrap_or("")
+                            .chars()
+                            .take(120)
+                            .collect(),
+                        duplicate_head: value
+                            .duplicate_raw
                             .as_deref()
                             .unwrap_or("")
                             .chars()
@@ -2676,6 +2685,13 @@ pub(super) fn validate_canonical_form_choice_parameter_links(
                 reason: form_choice_parameter_links_parse_error_class(&value.error),
                 primary_head: value
                     .primary_raw
+                    .as_deref()
+                    .unwrap_or("")
+                    .chars()
+                    .take(120)
+                    .collect(),
+                duplicate_head: value
+                    .duplicate_raw
                     .as_deref()
                     .unwrap_or("")
                     .chars()
@@ -37445,6 +37461,13 @@ pub(super) fn format_form_choice_parameter_cluster_xml(
                         reason: form_choice_parameter_links_parse_error_class(&value.error),
                         primary_head: value
                             .primary_raw
+                            .as_deref()
+                            .unwrap_or("")
+                            .chars()
+                            .take(120)
+                            .collect(),
+                        duplicate_head: value
+                            .duplicate_raw
                             .as_deref()
                             .unwrap_or("")
                             .chars()

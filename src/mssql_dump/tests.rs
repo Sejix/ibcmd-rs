@@ -25957,6 +25957,7 @@ fn input_field_choice_parameter_links_keep_empty_and_malformed_states_distinct()
             duplicate_slot,
             reason: "mirror_mismatch",
             primary_head: r#"{5006,1,"Filter.Owner",1,{27},0}"#.to_string(),
+            duplicate_head: r#"{5007,1,"Filter.Other",1,{27},0,"",""}"#.to_string(),
         })
     );
     let cluster = CanonicalFormChoiceParameterCluster::new(
@@ -25971,6 +25972,7 @@ fn input_field_choice_parameter_links_keep_empty_and_malformed_states_distinct()
             duplicate_slot,
             reason: "mirror_mismatch",
             primary_head: r#"{5006,1,"Filter.Owner",1,{27},0}"#.to_string(),
+            duplicate_head: r#"{5007,1,"Filter.Other",1,{27},0,"",""}"#.to_string(),
         })
     );
 }
@@ -26815,6 +26817,7 @@ fn detailed_form_extraction_preserves_malformed_link_rejection_diagnostics() {
                     .index(),
             reason: "mirror_mismatch",
             primary_head: r#"{5006,1,"Filter.Owner",1,{3},0}"#.to_string(),
+            duplicate_head: r#"{5007,1,"Filter.Other",1,{3},0,"",""}"#.to_string(),
         }
     );
     assert_eq!(diagnostics.len(), 2);
