@@ -80648,3 +80648,27 @@ fn xdto_row_yields_a_name() {
     let names = names.expect("xdto names parse");
     assert_eq!(names.full_name, "XDTOPackage.Patch");
 }
+
+#[test]
+#[ignore = "reproduces the missing vertical page break"]
+fn mxl_page_break_parses() {
+    use std::collections::BTreeMap;
+    let text = include_str!("fixtures/mxl_page_breaks.txt");
+    let text = &text[text.find('{').expect("body brace")..];
+    let sheet = super::moxel::parse_moxel_spreadsheet_text(text, &BTreeMap::new())
+        .expect("spreadsheet parses");
+    eprintln!("vertical={:?} horizontal={:?}", sheet.page_breaks.vertical, sheet.page_breaks.horizontal);
+    assert_eq!(sheet.page_breaks.vertical, vec![35]);
+}
+
+#[test]
+#[ignore = "reproduces the missing style fonts"]
+fn mxl_style_fonts_parse() {
+    use std::collections::BTreeMap;
+    let text = include_str!("fixtures/mxl_style_fonts.txt");
+    let text = &text[text.find('{').expect("body brace")..];
+    let sheet = super::moxel::parse_moxel_spreadsheet_text(text, &BTreeMap::new())
+        .expect("spreadsheet parses");
+    eprintln!("fonts={} kinds={:?}", sheet.fonts.len(), sheet.fonts.iter().map(|f| f.kind).collect::<Vec<_>>());
+    assert_eq!(sheet.fonts.len(), 9);
+}
