@@ -11823,6 +11823,31 @@ pub(super) fn parse_moxel_merge_regions(
         })
         .filter_map(|(_, field)| parse_moxel_merge_region_list(field))
     {
+        // The platform collapses a region stored twice in a row: Accounting
+        // 3.0 `…/ПечатныйБланк2015Кв1_Раздел11` stores ten such pairs and
+        // publishes each once, while non-adjacent repeats stay separate.
+        let mut previous: Option<MoxelMerge> = None;
+        let field_merges = field_merges
+            .into_iter()
+            .filter(|merge| {
+                // Only a real region collapses: the negative-coordinate
+                // records (`<r>-1</r><c>1</c>`) are published as they are
+                // stored, duplicates included.
+                let duplicate = merge.row >= 0
+                    && merge.column >= 0
+                    && previous.as_ref().is_some_and(|candidate| {
+                        candidate.row == merge.row
+                        && candidate.column == merge.column
+                        && candidate.height == merge.height
+                        && candidate.width == merge.width
+                            && candidate.columns_id == merge.columns_id
+                    });
+                if !duplicate {
+                    previous = Some(merge.clone());
+                }
+                !duplicate
+            })
+            .collect::<Vec<_>>();
         merges.extend(field_merges);
         horizontal_unmerges.extend(field_horizontal_unmerges);
         vertical_unmerges.extend(field_vertical_unmerges);

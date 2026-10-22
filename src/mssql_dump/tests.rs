@@ -80671,3 +80671,21 @@ fn mxl_style_fonts_parse() {
     eprintln!("fonts={} kinds={:?}", sheet.fonts.len(), sheet.fonts.iter().map(|f| f.kind).collect::<Vec<_>>());
     assert_eq!(sheet.fonts.len(), 9);
 }
+
+#[test]
+fn mxl_merge_regions_are_unique() {
+    use std::collections::BTreeMap;
+    let text = include_str!("fixtures/mxl_merges.txt");
+    let text = &text[text.find('{').expect("body brace")..];
+    let sheet = super::moxel::parse_moxel_spreadsheet_text(text, &BTreeMap::new())
+        .expect("spreadsheet parses");
+    let mut unique = sheet
+        .merges
+        .iter()
+        .map(|merge| (merge.row, merge.column, merge.height, merge.width))
+        .collect::<Vec<_>>();
+    unique.sort();
+    unique.dedup();
+    eprintln!("merges={} unique={}", sheet.merges.len(), unique.len());
+    assert_eq!(sheet.merges.len(), 81);
+}
