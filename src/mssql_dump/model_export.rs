@@ -676,17 +676,33 @@ pub fn configuration_compatibility_8_5_or_later(args: &MssqlDumpConfigArgs) -> R
 // Diagnostics.
 
 /// A row of a modelled kind the model could not write: said once per row on
-/// stderr (the first twenty), and the legacy converter writes it.
+/// stderr (the first twenty), and the legacy converter writes it. Every row is
+/// also collected so the fail-closed gate can name all gaps in one error.
 pub(super) fn report_fallback(file_name: &str, error: &anyhow::Error) {
     use std::sync::atomic::{AtomicUsize, Ordering};
     static REPORTED: AtomicUsize = AtomicUsize::new(0);
+    let text = format!("{error:#}");
+    let first = text.lines().next().unwrap_or_default().to_owned();
     if REPORTED.fetch_add(1, Ordering::Relaxed) < 20 {
-        let text = format!("{error:#}");
-        eprintln!(
-            "model export: {file_name}: {}; the legacy converter writes it",
-            text.lines().next().unwrap_or_default()
-        );
+        eprintln!("model export: {file_name}: {first}; the legacy converter writes it");
     }
+    if let Ok(mut rows) = fallback_rows_sink().lock() {
+        rows.push(format!("{file_name}: {first}"));
+    }
+}
+
+/// Every row the model handed to the legacy converter, in discovery order.
+pub(super) fn fallback_rows() -> Vec<String> {
+    fallback_rows_sink()
+        .lock()
+        .map(|rows| rows.clone())
+        .unwrap_or_default()
+}
+
+fn fallback_rows_sink() -> &'static std::sync::Mutex<Vec<String>> {
+    static ROWS: std::sync::OnceLock<std::sync::Mutex<Vec<String>>> =
+        std::sync::OnceLock::new();
+    ROWS.get_or_init(|| std::sync::Mutex::new(Vec::new()))
 }
 
 /// The bytes a descriptor's file gets (`write_source_xml_file`).

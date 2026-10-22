@@ -2427,6 +2427,20 @@ fn dump_config_inner(
             .context("strict full source asset check failed")?;
     }
 
+    // The fail-closed side of the assurance invariant: one error naming every
+    // row the model had to hand to the legacy converter, so a gap can never
+    // hide behind a successful-looking tree.
+    if model_export::fail_on_fallback() {
+        let fallbacks = model_export::fallback_rows();
+        if !fallbacks.is_empty() {
+            bail!(
+                "model export fell back on {} row(s) with fail-closed enabled:\n  {}",
+                fallbacks.len(),
+                fallbacks.join("\n  ")
+            );
+        }
+    }
+
     Ok(MssqlDumpConfigReport {
         database: args.database.clone(),
         output_dir: args.output_dir.clone(),
@@ -6784,14 +6798,6 @@ fn dump_table_row_bytes(
                 }
                 Some(Err(error)) => {
                     model_export::report_fallback(file_name, &error);
-                    if model_export::fail_on_fallback() {
-                        // The fail-closed side of the assurance invariant: the
-                        // row is not handed to the legacy converter, so a gap
-                        // can never hide behind a successful-looking tree.
-                        return Err(error.context(format!(
-                            "model export cannot write {file_name}; fail-closed is enabled"
-                        )));
-                    }
                     timings.model_fallback_rows += 1;
                     legacy_from_text(row)
                 }

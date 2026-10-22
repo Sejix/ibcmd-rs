@@ -41,14 +41,17 @@ legacy-конвертеру):
 | `9565660f-9e2b-48f4-8b45-6dd6bbfa04c2` | `ExternalDataSource requires the exact empty child collections` — модель умеет только пустой внешний источник |
 | `6e094be6-40b6-4c4d-91a6-44503948f690` | `no name for picture 3b2a508b-f36e-4e0b-9dc0-70b2b56276a9` — ссылка на картинку без имени |
 
-С `IBCMD_RS_FAIL_ON_MODEL_FALLBACK=1` тот же экспорт завершается кодом −1:
+С `IBCMD_RS_FAIL_ON_MODEL_FALLBACK=1` тот же экспорт завершается кодом −1, и
+**одна ошибка перечисляет все строки**, а не первую:
 
 ```
-[ERROR] model export cannot write 6e094be6-…; fail-closed is enabled:
-        no name for picture 3b2a508b-…
+[ERROR] model export fell back on 2 row(s) with fail-closed enabled:
+[ERROR]   9565660f-…: ExternalDataSource requires the exact empty child collections
+[ERROR]   6e094be6-…: no name for picture 3b2a508b-…
 ```
 
-Это и есть работающий инвариант: дырка не прячется за успешным деревом.
+Это и есть работающий инвариант: дырка не прячется за успешным деревом, и
+карта покрытия собирается за один прогон.
 
 ## Измерители покрытия
 
