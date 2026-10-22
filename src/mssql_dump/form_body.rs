@@ -27974,14 +27974,34 @@ pub(super) fn parse_form_title_data_path(
         // the platform writes nothing.
         .or_else(|| {
             let segments = parse_form_bound_chain_segments(binding)?;
-            let [root] = segments.as_slice() else {
+            if let [root] = segments.as_slice()
+                && let [id] = root.as_slice()
+            {
+                let id = parse_form_chain_numeric_id(id)?;
+                return (!attribute_metadata_owners_by_id.contains_key(id))
+                    .then(|| id.to_string());
+            }
+            // A chain that reaches a reference the configuration cannot name
+            // is written physically, segment by segment. Evidence:
+            // `DataProcessors/БотТелеграм/Forms/Форма` stores
+            // `{3,{1},{0,dff8c7e9-…},{100000000}}` and the native element is
+            // `1/0:dff8c7e9-…/100000000`. Chains without such a reference keep
+            // the old behaviour (nothing is written when no route names them).
+            if !segments
+                .iter()
+                .any(|segment| matches!(segment.as_slice(), [kind, _] if kind.trim() == "0"))
+            {
                 return None;
-            };
-            let [id] = root.as_slice() else {
-                return None;
-            };
-            let id = parse_form_chain_numeric_id(id)?;
-            (!attribute_metadata_owners_by_id.contains_key(id)).then(|| id.to_string())
+            }
+            let mut parts = Vec::with_capacity(segments.len());
+            for segment in segments {
+                match segment.as_slice() {
+                    [value] => parts.push(value.trim().to_string()),
+                    [kind, uuid] => parts.push(format!("{}:{}", kind.trim(), uuid.trim())),
+                    _ => return None,
+                }
+            }
+            Some(parts.join("/"))
         })
 }
 
