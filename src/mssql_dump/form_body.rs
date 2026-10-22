@@ -14177,11 +14177,13 @@ fn parse_form_child_item_with_metadata_owners(
         // `FORM_DOCUMENT_FIELD_GEOMETRY`.
         enable_start_drag: table_schema
             .and_then(|schema| schema.enable_start_drag(&fields))
+            .or_else(|| legacy_table_flag(wrapper, &fields, 52))
             .or_else(|| {
                 parse_form_document_field_on_flag(tag, fields, |layout| layout.enable_start_drag)
             }),
         enable_drag: table_schema
             .and_then(|schema| schema.enable_drag(&fields))
+            .or_else(|| legacy_table_flag(wrapper, &fields, 53))
             .or_else(|| parse_planner_field_enable_drag(tag, fields)),
         file_drag_mode: if tag == "Table" {
             if let Some(schema) = table_schema {
@@ -14259,7 +14261,9 @@ fn parse_form_child_item_with_metadata_owners(
         use_alternation_row_color: table_schema
             .and_then(|schema| schema.use_alternation_row_color(&fields)),
         default_item: if tag == "Table" {
-            table_schema.and_then(|schema| schema.default_item(&fields))
+            table_schema
+                .and_then(|schema| schema.default_item(&fields))
+                .or_else(|| legacy_table_flag(wrapper, &fields, 16))
         } else if let Some(properties) = spreadsheet_document_properties.as_ref() {
             properties.default_item
         } else if tag == "Button" && form_button_layout_is_extended(&fields) {
@@ -14302,7 +14306,9 @@ fn parse_form_child_item_with_metadata_owners(
         } else {
             None
         },
-        initial_tree_view: table_schema.and_then(|schema| schema.initial_tree_view(&fields)),
+        initial_tree_view: table_schema
+            .and_then(|schema| schema.initial_tree_view(&fields))
+            .or_else(|| legacy_table_initial_tree_view(wrapper, &fields)),
         row_input_mode: table_schema.and_then(|schema| schema.row_input_mode(&fields)),
         table_choice_mode: table_schema.and_then(|schema| schema.choice_mode(&fields)),
         table_multiple_choice: table_schema.and_then(|schema| schema.multiple_choice(&fields)),
@@ -32754,6 +32760,27 @@ fn format_form_spreadsheet_document_properties_xml(item: &FormChildItem, indent:
         ));
     }
     xml
+}
+
+
+/// A boolean property of the legacy table layouts (`50`, `53`), read at the
+/// forward slot the modern layout uses once the record's insertion is removed.
+fn legacy_table_flag(wrapper: &str, fields: &[&str], slot: usize) -> Option<bool> {
+    matches!(wrapper, "50" | "53")
+        .then(|| fields.get(slot).map(|field| field.trim()))
+        .flatten()
+        .and_then(|value| (value == "1").then_some(true))
+}
+
+fn legacy_table_initial_tree_view(wrapper: &str, fields: &[&str]) -> Option<&'static str> {
+    if !matches!(wrapper, "50" | "53") {
+        return None;
+    }
+    match fields.get(39).map(|field| field.trim()) {
+        Some("1") => Some("ExpandTopLevel"),
+        Some("2") => Some("ExpandAllLevels"),
+        _ => None,
+    }
 }
 
 fn format_form_table_properties_xml(item: &FormChildItem, indent: usize) -> String {
