@@ -37,8 +37,6 @@ pub static ORDER_USUALGROUP: &[AttributeDef] = &[
     AttributeDef { id: 49, name: "TitleDataPath", default: Some("") },
     AttributeDef { id: 50, name: "BackColor", default: Some("auto") },
     AttributeDef { id: 51, name: "HiddenStateTitleBackColor", default: Some("auto") },
-    AttributeDef { id: 52, name: "ThroughAlign", default: Some("Auto") },
-    AttributeDef { id: 53, name: "CurrentRowUse", default: Some("DontUse") },
     AttributeDef { id: 54, name: "AssociatedTableElementId", default: None },
     AttributeDef { id: 55, name: "ShowAsCard", default: Some("false") },
     AttributeDef { id: 56, name: "BackPictureEffect", default: Some("Auto") },
@@ -46,6 +44,8 @@ pub static ORDER_USUALGROUP: &[AttributeDef] = &[
     AttributeDef { id: 58, name: "Hyperlink", default: Some("false") },
     AttributeDef { id: 59, name: "BackPicture", default: None },
     AttributeDef { id: 60, name: "ScrollOnCompress", default: Some("auto") },
+    AttributeDef { id: 53, name: "CurrentRowUse", default: Some("DontUse") },
+    AttributeDef { id: 52, name: "ThroughAlign", default: Some("Auto") },
 ];
 
 pub static ORDER_TABLE: &[AttributeDef] = &[
@@ -280,15 +280,15 @@ pub static ORDER_FORM: &[AttributeDef] = &[
     AttributeDef { id: 38, name: "Scale", default: Some("100") },
     AttributeDef { id: 39, name: "ScaleVariant", default: Some("Auto") },
     AttributeDef { id: 40, name: "ConversationsRepresentation", default: Some("Auto") },
-    AttributeDef { id: 41, name: "MobileDeviceCommandBarContent", default: None },
-    AttributeDef { id: 42, name: "CommandSet", default: None },
-    AttributeDef { id: 43, name: "ShowTitle", default: Some("auto") },
-    AttributeDef { id: 44, name: "ShowCloseButton", default: Some("true") },
     AttributeDef { id: 45, name: "CollapseItemsByImportanceVariant", default: Some("Auto") },
     AttributeDef { id: 46, name: "CreateButtonsGroupTitle", default: None },
     AttributeDef { id: 47, name: "CreateButtonsGroupPicture", default: None },
     AttributeDef { id: 48, name: "WindowViewMode", default: None },
     AttributeDef { id: 49, name: "ShowCommandBar", default: Some("auto") },
+    AttributeDef { id: 43, name: "ShowTitle", default: Some("auto") },
+    AttributeDef { id: 44, name: "ShowCloseButton", default: Some("true") },
+    AttributeDef { id: 42, name: "CommandSet", default: None },
+    AttributeDef { id: 41, name: "MobileDeviceCommandBarContent", default: None },
 ];
 
 pub static ORDER_PAGES: &[AttributeDef] = &[

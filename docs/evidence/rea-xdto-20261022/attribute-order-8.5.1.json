@@ -106,16 +106,6 @@
       "default": "auto"
     },
     {
-      "id": "0x34",
-      "name": "ThroughAlign",
-      "default": "Auto"
-    },
-    {
-      "id": "0x35",
-      "name": "CurrentRowUse",
-      "default": "DontUse"
-    },
-    {
       "id": "0x36",
       "name": "AssociatedTableElementId",
       "default": null
@@ -149,6 +139,16 @@
       "id": "0x3c",
       "name": "ScrollOnCompress",
       "default": "auto"
+    },
+    {
+      "id": "0x35",
+      "name": "CurrentRowUse",
+      "default": "DontUse"
+    },
+    {
+      "id": "0x34",
+      "name": "ThroughAlign",
+      "default": "Auto"
     }
   ],
   "Table": [
@@ -1269,26 +1269,6 @@
       "default": "Auto"
     },
     {
-      "id": "0x29",
-      "name": "MobileDeviceCommandBarContent",
-      "default": null
-    },
-    {
-      "id": "0x2a",
-      "name": "CommandSet",
-      "default": null
-    },
-    {
-      "id": "0x2b",
-      "name": "ShowTitle",
-      "default": "auto"
-    },
-    {
-      "id": "0x2c",
-      "name": "ShowCloseButton",
-      "default": "true"
-    },
-    {
       "id": "0x2d",
       "name": "CollapseItemsByImportanceVariant",
       "default": "Auto"
@@ -1312,6 +1292,26 @@
       "id": "0x31",
       "name": "ShowCommandBar",
       "default": "auto"
+    },
+    {
+      "id": "0x2b",
+      "name": "ShowTitle",
+      "default": "auto"
+    },
+    {
+      "id": "0x2c",
+      "name": "ShowCloseButton",
+      "default": "true"
+    },
+    {
+      "id": "0x2a",
+      "name": "CommandSet",
+      "default": null
+    },
+    {
+      "id": "0x29",
+      "name": "MobileDeviceCommandBarContent",
+      "default": null
     }
   ],
   "Pages": [
