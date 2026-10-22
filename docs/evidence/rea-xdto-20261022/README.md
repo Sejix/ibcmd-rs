@@ -98,6 +98,24 @@ XDTO задаёт **идентичность и порядок XML-атрибу�
 разбор. XDTO-таблицы применяются там, где формируется XML: имена атрибутов,
 их порядок и умолчания.
 
+## Контракт порядка для писателя XML
+
+Писатель XML живёт не в `form_body.rs` (тот разбирает блоб), а в
+`src/compiler/bodies/form_native.rs`. Порядок атрибутов там задан кодом; XDTO
+даёт имена для ID, а нативные последовательности — сам порядок.
+
+Собранный контракт: [attribute-order-8.5.1.json](attribute-order-8.5.1.json) —
+для десяти элементов список `{id, name, default}` в порядке, в котором пишет
+платформа. Например:
+
+```
+Table:      0xc name, 0xb id, 0xd DisplayImportance, 0xe Representation, 0xf Visible, …
+UsualGroup: 0x1f Group, 0x20 ChildrenAlign, 0x21 HorizontalSpacing, …
+```
+
+Его и должен потреблять `form_native.rs`: имя атрибута и умолчание берутся из
+XDTO, порядок — из контракта.
+
 ## Воспроизведение
 
 ```powershell
