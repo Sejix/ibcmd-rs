@@ -8280,7 +8280,10 @@ fn parse_flowchart_font_tuple(text: &str) -> Option<FlowchartFont> {
                     reference: String::new(),
                     kind: "AutoFont",
                     height: font_height_xml(Some(tenths)),
-                    bold: Some(weight >= 700),
+                    // A non-bold weight is the absence of the attribute, not
+                    // `bold="false"` (native `<Font height="8" kind="AutoFont"/>`
+                    // comes from the `{7,3,2,80,1,100}` record).
+                    bold: (weight >= 700).then_some(true),
                     ..FlowchartFont::default()
                 });
             }
