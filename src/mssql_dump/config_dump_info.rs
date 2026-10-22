@@ -291,7 +291,50 @@ pub(super) fn canonical_reference_names(
         inventory.metadata_texts,
         inventory.object_refs,
     );
+    add_external_data_source_table_references(&mut canonical_refs, inventory.metadata_texts);
     Ok(canonical_refs)
+}
+
+/// Names the tables of an `ExternalDataSource`.
+///
+/// A table row carries only its own header; its owner is named by the
+/// collection entry `{<Tables collection>,<count>,<table uuid>,…}` inside the
+/// external data source row. `ConfigDumpInfo` addresses the table as
+/// `ExternalDataSource.<owner>.Table.<table>`, so the collection id from the
+/// schema joins the two rows.
+fn add_external_data_source_table_references(
+    canonical_refs: &mut BTreeMap<String, String>,
+    rows: &[MetadataTextRow],
+) {
+    let collection = ibcmd_schema::external_data_source::EMPTY_COLLECTIONS[2];
+    let names: BTreeMap<&str, &str> = rows
+        .iter()
+        .filter_map(|row| row.header.as_ref().map(|header| (header.uuid.as_str(), header.name.as_str())))
+        .collect();
+    let marker = format!("{{{collection},");
+    for row in rows {
+        let Some(header) = row.header.as_ref() else {
+            continue;
+        };
+        let mut rest = row.text.as_str();
+        while let Some(start) = rest.find(&marker) {
+            let after = &rest[start + marker.len()..];
+            let end = after.find('}').unwrap_or(after.len());
+            let body = &after[..end];
+            // `{collection,<count>,<uuid>,<uuid>…}`: the count is an atom and
+            // the identifiers follow it.
+            for part in body.split(',') {
+                let candidate = part.trim();
+                let Some(table_name) = names.get(candidate) else {
+                    continue;
+                };
+                canonical_refs
+                    .entry(candidate.to_owned())
+                    .or_insert_with(|| format!("ExternalDataSource.{}.Table.{table_name}", header.name));
+            }
+            rest = &after[end..];
+        }
+    }
 }
 
 /// The parts of the rows (the nested `<Metadata>` of ConfigDumpInfo.xml:
@@ -962,6 +1005,12 @@ fn build_config_dump_children(
                 child_name.clone()
             } else if row.kind.as_deref() == Some("DocumentJournal") {
                 format!("{owner_name}.Column.{}", header.name)
+            } else if owner_name.contains(".Table.") {
+                // An `ExternalDataSource` table names its columns as
+                // `ExternalDataSource.<owner>.Table.<table>.Field.<field>`;
+                // they are nested headers of the table row and never appear in
+                // the top-level object references.
+                format!("{owner_name}.Field.{}", header.name)
             } else {
                 unresolved_child_roles.insert(format!(
                     "{} {}: {} ({})",
