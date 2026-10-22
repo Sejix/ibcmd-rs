@@ -13171,6 +13171,10 @@ fn parse_form_child_item_with_metadata_owners(
         .then(|| {
             let mut trimmed = fields.to_vec();
             trimmed.remove(15);
+            // The record also closes one member later than the modern layout:
+            // the tail scalar the reverse offsets read sits one position
+            // further from the end.
+            trimmed.pop();
             trimmed
         });
     let fields = legacy_table_trimmed.as_deref().unwrap_or(fields);
