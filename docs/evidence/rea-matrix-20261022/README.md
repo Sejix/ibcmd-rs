@@ -1372,3 +1372,22 @@ incomplete form (V2 layout, platform-generated table): <путь>
 индексе есть, и пропуск `DataPath` не из-за отсутствия типа каталога.
 
 Тесты 4066, расхождений 668.
+
+### Раунд 100: `DataPath` теряется раньше резолва типа
+
+Трассировка `resolve_form_owner_scoped_standard_attribute_data_path` (29 промахов
+за выгрузку) показала: **нашего случая среди них нет**. Промахи — это
+`dcsset:SettingsComposer` (-2/-3/-4), `InformationRegisterRecord` (-2/-3/-9/-10),
+`CatalogRef` (1/2/5), `CatalogObject` (-13), `EnumRef` (1/2/13).
+
+Для формы `Catalogs/ТипыДокументов/Forms/ФормаЭлемента` запись пути —
+`{2,{1},{-3}}` (корень «Объект», стандартный реквизит `-3`), и в
+`resolve_form_owner_scoped_standard_attribute_data_path` она не попадает вовсе:
+значит `parse_form_child_item_data_path` отбрасывает её раньше — до вызова
+резолвера по типу.
+
+Следующий шаг: инструментировать `parse_form_child_item_data_path` на теге
+`InputField` с корнем `{1}` и отрицательным столбцом (какая ветка вернула
+`None`).
+
+Тесты 4066, расхождений 668.
