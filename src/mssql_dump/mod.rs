@@ -8179,7 +8179,9 @@ impl Default for FlowchartFont {
 /// written with no reference at all.
 fn parse_flowchart_font_tuple(text: &str) -> Option<FlowchartFont> {
     let fields = split_1c_braced_fields(text, 0)?;
-    if fields.first()?.trim() != "7" {
+    // The record's own marker is `7` on most schemes and `6` where the style
+    // itself is `{6,…}` (МакетКарты82 writes `{6,3,6,120,700,1}`).
+    if !matches!(fields.first()?.trim(), "6" | "7") {
         return None;
     }
     let kind = fields.get(1).map(|field| field.trim()).unwrap_or("1");
@@ -8199,18 +8201,34 @@ fn parse_flowchart_font_tuple(text: &str) -> Option<FlowchartFont> {
             (reference, "StyleItem")
         }
         "3" => {
-            if fields.len() != 5
-                || fields.get(2)?.trim() != "0"
-                || fields.get(3)?.trim() != "1"
-                || fields.get(4)?.trim() != "100"
+            // `{7,3,0,1,100}` is the sizeless form; the 8.5 record carries
+            // explicit height and weight: `{6,3,6,120,700,1}` publishes
+            // `<Font height="12" bold="true" kind="AutoFont"/>`, and
+            // `{6,3,2,100,1}` publishes `height="10"` alone.
+            if fields.len() == 5
+                && fields.get(2)?.trim() == "0"
+                && fields.get(3)?.trim() == "1"
+                && fields.get(4)?.trim() == "100"
             {
-                return None;
+                return Some(FlowchartFont {
+                    reference: String::new(),
+                    kind: "AutoFont",
+                    ..FlowchartFont::default()
+                });
             }
-            return Some(FlowchartFont {
-                reference: String::new(),
-                kind: "AutoFont",
-                ..FlowchartFont::default()
-            });
+            if fields.len() == 6 {
+                let tenths = fields.get(3)?.trim().parse::<i64>().ok()?;
+                let weight = fields.get(4)?.trim().parse::<i64>().ok()?;
+                let height = format!("{}", tenths / 10);
+                return Some(FlowchartFont {
+                    reference: String::new(),
+                    kind: "AutoFont",
+                    height: font_height_xml(Some(height.as_str())),
+                    bold: Some(weight >= 700),
+                    ..FlowchartFont::default()
+                });
+            }
+            return None;
         }
         _ => return None,
     };
