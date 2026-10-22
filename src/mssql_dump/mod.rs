@@ -8710,9 +8710,15 @@ fn format_exchange_plan_content_xml_with_extension(
     items: &[ExchangePlanContentItem],
     extension: &[(String, &'static str)],
 ) -> String {
-    let mut xml = String::from(
-        "\u{feff}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n\
-<ExchangePlanContent xmlns=\"http://v8.1c.ru/8.3/xcf/extrnprops\" xmlns:xr=\"http://v8.1c.ru/8.3/xcf/readable\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" version=\"2.20\">\r\n",
+    let root = "<ExchangePlanContent xmlns=\"http://v8.1c.ru/8.3/xcf/extrnprops\" xmlns:xr=\"http://v8.1c.ru/8.3/xcf/readable\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" version=\"2.20\"";
+    // An empty content is a self-closing element, as the platform writes it.
+    if items.is_empty() && extension.is_empty() {
+        return format!(
+            "\u{feff}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n{root}/>"
+        );
+    }
+    let mut xml = format!(
+        "\u{feff}<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n{root}>\r\n"
     );
     for item in items {
         xml.push_str(&format!(
