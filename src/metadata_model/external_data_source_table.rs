@@ -53,20 +53,24 @@ pub(crate) fn from_brace(row: &Brace) -> Result<TableRecord> {
         bail!("external-data-source table: identity wrapper");
     }
     let head = header(&identity[1])?;
+    // Every generated type is a pair of top-level identifiers. The stored
+    // order is not the XML order: `RecordManager` sits after the table's own
+    // scalar run, behind the field-map lists.
     let mut generated = Vec::new();
-    let mut slot = 2;
-    while slot + 1 < body.len() {
-        let Some(first) = body[slot].as_atom() else {
-            break;
+    let mut pending: Option<&str> = None;
+    for node in body.iter().skip(2) {
+        let Some(value) = node.as_atom() else {
+            pending = None;
+            continue;
         };
-        let Some(second) = body[slot + 1].as_atom() else {
-            break;
-        };
-        if first.len() != 36 || second.len() != 36 {
-            break;
+        if value.len() != 36 || value == super::brace::NIL_UUID {
+            pending = None;
+            continue;
         }
-        generated.push((first.to_string(), second.to_string()));
-        slot += 2;
+        match pending.take() {
+            Some(first) => generated.push((first.to_string(), value.to_string())),
+            None => pending = Some(value),
+        }
     }
     let fields = outer
         .iter()
@@ -136,7 +140,23 @@ mod tests {
         let table = parse(ROW).expect("a table row");
         assert_eq!(table.name, "oc_product_to_1c");
         assert_eq!(table.uuid, "78afc3f6-2d63-4482-a33e-fd11f668c2b6");
-        assert_eq!(table.generated.len(), 7, "seven type pairs are stored");
+        assert_eq!(table.generated.len(), 8, "seven pairs plus RecordManager");
+        assert_eq!(
+            table.generated[0],
+            (
+                "59d4ebec-6e82-490e-acae-9d528e1e0245".to_string(),
+                "5c8729a1-e458-4723-a52d-35c80789f296".to_string()
+            ),
+            "Manager comes first"
+        );
+        assert_eq!(
+            table.generated[7],
+            (
+                "57f5e963-2504-4a54-8192-6dc60932dd59".to_string(),
+                "537441e5-2b29-4613-978b-eb29a76ca9fc".to_string()
+            ),
+            "RecordManager is stored last"
+        );
         assert_eq!(table.fields.len(), 2);
         assert_eq!(table.fields[0].name, "product_id");
         assert_eq!(table.fields[0].pattern, vec!["N", "10", "0", "0"]);

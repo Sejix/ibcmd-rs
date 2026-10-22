@@ -7,7 +7,7 @@
 ## Реализовано
 
 `metadata_model::external_data_source_table` — разбор строки кода `11`:
-заголовок, семь пар сгенерированных типов, коллекция полей `c7075688-…`,
+заголовок, восемь пар сгенерированных типов (RecordManager хранится последним, после поля), коллекция полей `c7075688-…`,
 у каждого поля — `uuid`, имя и `{"Pattern", …}`. Тест
 `reads_the_table_identity_types_and_fields` читает реальную строку
 (`fixtures/external_data_source_table_row.txt`) и проверяет два поля:
