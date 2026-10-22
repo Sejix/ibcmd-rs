@@ -80611,3 +80611,17 @@ fn mxl_legacy_pictures_parse() {
         .expect("spreadsheet parses");
     assert_eq!(sheet.pictures.len(), 5);
 }
+
+#[test]
+fn mxl_legacy_absolute_fonts_parse() {
+    use std::collections::BTreeMap;
+    let text = include_str!("fixtures/mxl_absolute_fonts.txt");
+    let text = &text[text.find('{').expect("body brace")..];
+    let sheet = super::moxel::parse_moxel_spreadsheet_text(text, &BTreeMap::new())
+        .expect("spreadsheet parses");
+    assert_eq!(sheet.fonts.len(), 2);
+    assert_eq!(sheet.fonts[0].kind, "Absolute");
+    assert_eq!(sheet.fonts[0].height.as_deref(), Some("10"));
+    assert_eq!(sheet.fonts[0].bold, Some(true));
+    assert_eq!(sheet.fonts[1].height.as_deref(), Some("8"));
+}

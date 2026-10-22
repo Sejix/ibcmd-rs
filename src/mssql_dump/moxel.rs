@@ -4950,6 +4950,27 @@ pub(super) fn parse_moxel_group_header_colors(
     colors
 }
 
+
+/// `{6,0,<mask>? ,<height>,…,"<face>",<flag>}`: the layout an absolute font
+/// carries when the tuple is stored with the older leading marker.
+fn looks_like_legacy_absolute_font(field: &str) -> bool {
+    let Some(fields) = split_1c_braced_fields(field.trim(), 0) else {
+        return false;
+    };
+    if !matches!(fields.len(), 18 | 19) || fields.get(1).map(|value| value.trim()) != Some("0") {
+        return false;
+    }
+    let face = fields
+        .get(16)
+        .and_then(|value| parse_1c_string(value))
+        .is_some_and(|name| !name.is_empty());
+    let height = fields
+        .get(3)
+        .and_then(|value| value.trim().parse::<usize>().ok())
+        .is_some_and(|height| height > 0);
+    face && height
+}
+
 pub(super) fn parse_moxel_fonts(
     fields: &[&str],
     object_refs: &BTreeMap<String, String>,
@@ -4958,9 +4979,14 @@ pub(super) fn parse_moxel_fonts(
     fields
         .iter()
         .enumerate()
-        // A font descriptor leads with `7`.
-        .filter(|(index, _)| {
-            root_shape_allows(shapes.as_deref(), *index, |shape| shape.leads_with(7))
+        // A font descriptor leads with `7`; the older writer uses `6` on the
+        // absolute shape only, so that head is recognized by the record's own
+        // slots rather than by its first token alone.
+        .filter(|(index, field)| {
+            root_shape_allows(shapes.as_deref(), *index, |shape| {
+                shape.leads_with(7)
+                    || (shape.leads_with(6) && looks_like_legacy_absolute_font(field))
+            })
         })
         .filter_map(|(_, field)| parse_moxel_font(field, object_refs))
         .collect()
@@ -5089,7 +5115,9 @@ pub(super) fn parse_moxel_font(
     object_refs: &BTreeMap<String, String>,
 ) -> Option<MoxelFont> {
     let fields = split_1c_braced_fields(text, 0)?;
-    if fields.first()?.trim() != "7" {
+    // The record's own marker is `7` on most corpora and `6` where the tuple
+    // is stored by the older writer (Accounting 3.0 templates).
+    if !matches!(fields.first()?.trim(), "6" | "7") {
         return None;
     }
     match fields.get(1)?.trim() {
@@ -5142,7 +5170,7 @@ pub(super) fn parse_moxel_font(
         // publishes unchanged - the arity (`fields.len() == 19`) already
         // names this shape, so an extra equality on an unused field only
         // rejected valid records.
-        "0" if fields.len() == 19 => {
+        "0" if matches!(fields.len(), 18 | 19) => {
             let height_raw = fields.get(3)?.trim().parse::<usize>().ok()?;
             let weight = fields.get(7)?.trim().parse::<usize>().ok()?;
             Some(MoxelFont {
@@ -5154,7 +5182,13 @@ pub(super) fn parse_moxel_font(
                 underline: Some(fields.get(9)?.trim() != "0"),
                 strikeout: Some(fields.get(10)?.trim() != "0"),
                 kind: "Absolute",
-                scale: Some(fields.get(18)?.trim().parse::<usize>().ok()?),
+                // The 18-member record carries no scale member; the platform
+                // then writes the neutral `100`.
+                scale: Some(if fields.len() == 19 {
+                    fields.get(18)?.trim().parse::<usize>().ok()?
+                } else {
+                    100
+                }),
             })
         }
         kind @ ("1" | "2") => {
