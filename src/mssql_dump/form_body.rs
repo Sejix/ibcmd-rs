@@ -20138,6 +20138,13 @@ pub(super) fn parse_form_font_style_ref(
     let style_slot = split_1c_braced_fields(fields.get(3)?.trim(), 0)?;
     if style_slot.len() == 1 {
         let code = style_slot.first()?.trim().parse::<i32>().ok()?;
+        // Code zero is printed literally (`<Font ref="0" height="10"
+        // kind="StyleItem"/>`, CommonForms
+        // `ВводДанныхДляРасчетаСреднегоЗаработкаОбщий`/`…ФСС`); every other
+        // code names a standard style.
+        if code == 0 {
+            return Some("0".to_string());
+        }
         return standard_style_item_for_code(code).map(|(_, name)| format!("style:{name}"));
     }
     if style_slot.first().map(|value| value.trim()) != Some("0") {
