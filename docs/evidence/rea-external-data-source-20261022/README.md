@@ -10,10 +10,20 @@
 заголовок (имя, синоним, комментарий), восемь пар сгенерированных типов
 (RecordManager хранится последним, после поля), коллекция полей `c7075688-…`.
 У каждого поля — `uuid`, имя, `NameInDataSource` и `{"Pattern", …}`; имя поля
-и имя колонки могут различаться (`_c_id` хранится как `1c_id`). Тест
-`reads_the_table_identity_types_and_fields` читает реальную строку
-(`fixtures/external_data_source_table_row.txt`) и проверяет оба поля и оба
-имени. Писатель XML и встраивание в индекс — следующие шаги.
+и имя колонки могут различаться (`_c_id` хранится как `1c_id`).
+
+Писатель `to_element` собирает объект `Table`: `InternalInfo` из восьми типов
+в порядке XML (`Manager, Object, Ref, List, Record, RecordSet, RecordKey,
+RecordManager`), `Properties` из 38 элементов в наблюдённом порядке и
+`ChildObjects` с полями (тип из `Pattern`, квалификаторы, `FillValue` с
+`xsi:type`). Неизвестный код типа поля — ошибка, а не умолчание. Тест
+`writes_the_table_structure_in_the_platforms_order` проверяет порядок секций,
+порядок категорий, 38 свойств, ссылку `KeyFields` и тип первого поля.
+
+Открытые вопросы для байтового паритета: `TableType`/`TableDataType` (в
+примере `Table`/`ObjectData`), список `KeyFields` (в примере — `product_id`) и
+`InputByString`. Их источник в строке ещё не размечен, поэтому пока писатель
+принимает ключевые поля параметром.
 
 ## Коды объектов
 
