@@ -21,6 +21,9 @@ pub(crate) const FIELD_COLLECTION: &str = "c7075688-01c1-41ba-bd1c-1023c8189079"
 pub(crate) struct FieldRecord {
     pub uuid: String,
     pub name: String,
+    /// `NameInDataSource`: the column name in the external source. It differs
+    /// from the field name (`_c_id` is stored as `1c_id`).
+    pub name_in_source: String,
     /// `{"N",10,0,0}`, `{"S",255,1}`, … as stored.
     pub pattern: Vec<String>,
 }
@@ -29,6 +32,9 @@ pub(crate) struct FieldRecord {
 pub(crate) struct TableRecord {
     pub uuid: String,
     pub name: String,
+    /// The header's synonym, as stored (`<Synonym>` content).
+    pub synonym: Brace,
+    pub comment: String,
     /// Generated type pairs in stored order (the XML order differs).
     pub generated: Vec<(String, String)>,
     pub fields: Vec<FieldRecord>,
@@ -94,6 +100,8 @@ pub(crate) fn from_brace(row: &Brace) -> Result<TableRecord> {
     Ok(TableRecord {
         uuid: head.uuid,
         name: head.name,
+        synonym: head.synonym,
+        comment: head.comment,
         generated,
         fields,
     })
@@ -122,6 +130,11 @@ fn field_record(entry: &Brace) -> Result<FieldRecord> {
     Ok(FieldRecord {
         uuid: head.uuid,
         name: head.name,
+        name_in_source: wrapped
+            .get(2)
+            .and_then(Brace::as_str)
+            .unwrap_or_default()
+            .to_string(),
         pattern: kind,
     })
 }
@@ -159,8 +172,12 @@ mod tests {
         );
         assert_eq!(table.fields.len(), 2);
         assert_eq!(table.fields[0].name, "product_id");
+        assert_eq!(table.fields[0].name_in_source, "product_id");
         assert_eq!(table.fields[0].pattern, vec!["N", "10", "0", "0"]);
         assert_eq!(table.fields[1].name, "_c_id");
+        // The column name in the source differs from the field name.
+        assert_eq!(table.fields[1].name_in_source, "1c_id");
         assert_eq!(table.fields[1].pattern, vec!["S", "255", "1"]);
+        assert_eq!(table.comment, "");
     }
 }
