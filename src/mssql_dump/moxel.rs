@@ -5225,8 +5225,13 @@ pub(super) fn parse_moxel_font(
                 .filter(|bit| moxel_font_mask_has(mask, *bit))
                 .collect::<Vec<_>>();
             // Four framing fields, one field per member bit, then the two
-            // trailing slots the descriptor always carries.
-            if fields.len() != members.len() + 6 || fields.get(fields.len() - 2)?.trim() != "1" {
+            // trailing slots the descriptor always carries. The first of the
+            // two is a flag that is `1` on most corpora and `0` on the style
+            // fonts Accounting 3.0 stores (`…,"Arial",0,100`); the platform
+            // publishes neither as an attribute, so only the shape is checked.
+            if fields.len() != members.len() + 6
+                || !matches!(fields.get(fields.len() - 2)?.trim(), "0" | "1")
+            {
                 return None;
             }
             let mut face_name = None;

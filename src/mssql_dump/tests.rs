@@ -80662,7 +80662,6 @@ fn mxl_page_break_parses() {
 }
 
 #[test]
-#[ignore = "reproduces the missing style fonts"]
 fn mxl_style_fonts_parse() {
     use std::collections::BTreeMap;
     let text = include_str!("fixtures/mxl_style_fonts.txt");
