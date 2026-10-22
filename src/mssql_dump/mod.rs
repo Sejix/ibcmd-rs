@@ -7909,10 +7909,15 @@ fn parse_flowchart_picture(text: &str) -> Option<FlowchartPicture> {
             })
         }
         "3" => {
-            if fields.len() != 10
+            // 8.5.1.1529 writes the embedded picture without the two trailing
+            // members (`0` and the empty string) that the ERP corpus carries:
+            // `{3,3,{0},"",-1,-1,0,{<base64>}}` is the whole record there.
+            let long_layout = fields.len() == 10
+                && fields.get(8)?.trim() == "0"
+                && fields.get(9)?.trim() == "\"\"";
+            let short_layout = fields.len() == 8;
+            if !(long_layout || short_layout)
                 || split_1c_braced_fields(fields.get(2)?, 0)? != vec!["0"]
-                || fields.get(8)?.trim() != "0"
-                || fields.get(9)?.trim() != "\"\""
             {
                 return None;
             }
@@ -7947,6 +7952,8 @@ fn flowchart_picture_extension(data: &[u8]) -> Option<&'static str> {
         Some("jpg")
     } else if data.starts_with(b"BM") {
         Some("bmp")
+    } else if data.starts_with(b"GIF87a") || data.starts_with(b"GIF89a") {
+        Some("gif")
     } else {
         None
     }
