@@ -263,6 +263,34 @@ pub fn decode_object(kind: &str, row: &Brace, context: &ExportContext) -> Result
     }
 }
 
+fn generic_object_names(kind: &str, row: &Brace) -> Result<ObjectNames> {
+    fn find(node: &Brace, depth: usize) -> Option<super::export::values::Header> {
+        if let Ok(header) = super::export::values::header(node)
+            && !header.name.is_empty()
+        {
+            return Some(header);
+        }
+        if depth == 0 {
+            return None;
+        }
+        if let Brace::List(items) = node {
+            for item in items {
+                if let Some(header) = find(item, depth - 1) {
+                    return Some(header);
+                }
+            }
+        }
+        None
+    }
+    let header = find(row, 2).ok_or_else(|| anyhow!("not yet: no row decoder for {kind}"))?;
+    Ok(ObjectNames {
+        uuid: header.uuid,
+        full_name: format!("{kind}.{}", header.name),
+        children: Vec::new(),
+        types: Vec::new(),
+    })
+}
+
 /// What one stored row contributes to a name index.
 pub fn object_names(kind: &str, row: &Brace) -> Result<ObjectNames> {
     match kind {
@@ -304,7 +332,10 @@ pub fn object_names(kind: &str, row: &Brace) -> Result<ObjectNames> {
         "Subsystem" | "Form" | "Template" | "CommonForm" => {
             super::common::forms_export::names(kind, row)
         }
-        other => bail!("not yet: no row decoder for {other}"),
+        // Kinds without a decoder of their own still name themselves through
+        // the same md header every object carries. That is enough for the name
+        // index, which is all a reference needs.
+        other => generic_object_names(other, row),
     }
 }
 
