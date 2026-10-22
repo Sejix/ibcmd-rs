@@ -61,9 +61,11 @@ use ibcmd_schema::{
     FormChoiceListEmptyCollection, FormChoiceListEmptyStringValue,
     FormChoiceListItem as SchemaFormChoiceListItem, FormChoiceListItemPart,
     FormChoiceListLayoutProfile, FormChoiceParameterAvailableTypes, FormChoiceParameterCluster,
-    FormChoiceParameterClusterMember, FormChoiceParameterLinkReference,
+    FormChoiceParameterClusterMember, FormChoiceParameterLink,
+    FormChoiceParameterLinkReference,
     FormChoiceParameterLinkStandardTerminal, FormChoiceParameterLinkTableCurrentDataTerminal,
-    FormChoiceParameterLinkTerminal, FormChoiceParameterLinks, FormChoiceParameterLinksParseError,
+    FormChoiceParameterLinkTerminal, FormChoiceParameterLinkValueChange, FormChoiceParameterLinks,
+    FormChoiceParameterLinksParseError,
     FormChoiceParameters, FormTextDocumentContextMenu, FormTextDocumentContextMenuParseError,
     GeneratedMetadataOwner, GeneratedMetadataOwnerFamily, GeneratedMetadataOwnerRole,
     MetadataDataPathRole, SchemaError, WriterPolicy, WriterRuleKey, WriterRuleLookupError,
@@ -18552,6 +18554,105 @@ pub(super) fn parse_form_radio_button_options<'a>(fields: &'a [&'a str]) -> Opti
     })
 }
 
+/// The legacy `{5004,…}` link collection: each link stores the bound data path
+/// itself (`{1}` + `{0,<attribute binding>}` for a form attribute,
+/// `{7,<table item>}` + `{0,<column binding>}` for a table column), and the
+/// `5007` mirror is usually empty, so the collection has to be read alone.
+fn parse_legacy_5004_choice_parameter_links(
+    primary: &str,
+    table_name_by_id: &BTreeMap<String, String>,
+    table_column_names_by_id: &BTreeMap<String, BTreeMap<String, String>>,
+    type_link_data_path_by_table_column: &BTreeMap<(String, String), String>,
+    data_path_by_binding_key: &BTreeMap<String, String>,
+) -> Option<Vec<FormChoiceParameterLink>> {
+    let fields = split_1c_braced_fields(primary.trim(), 0)?;
+    if fields.first()?.trim() != "5004" {
+        return None;
+    }
+    let count = fields.get(1)?.trim().parse::<usize>().ok()?;
+    let mut index = 2usize;
+    let mut links = Vec::new();
+    for _ in 0..count {
+        let name = parse_1c_string(fields.get(index)?)?;
+        index += 1;
+        let member_count = fields.get(index)?.trim().parse::<usize>().ok()?;
+        index += 1;
+        if member_count != 2 {
+            return None;
+        }
+        let first = fields.get(index)?.trim().to_string();
+        index += 1;
+        let second = fields.get(index)?.trim().to_string();
+        index += 1;
+        let value_change_token = fields.get(index)?.trim().to_string();
+        let value_change = match value_change_token.as_str() {
+            "0" => FormChoiceParameterLinkValueChange::Clear,
+            other => {
+                return None;
+            }
+        };
+        index += 1;
+        let data_path = if first == "{1}" {
+            let key = parse_form_binding_key(&second)?;
+            match data_path_by_binding_key.get(&key) {
+                // The legacy link names the choice parameter's own path
+                // (`Объект.Организация`), while the route map holds the
+                // attribute's type path (`ВалютаРегламентированногоУчета.
+                // Организация`).
+                Some(path) => format!("Объект.{}", path.rsplit('.').next().unwrap_or(path)),
+                None => return None,
+            }
+        } else {
+            let head = split_1c_braced_fields(&first, 0)?;
+            if head.first()?.trim() != "7" {
+                return None;
+            }
+            // The uuid in `{7,<uuid>}` is the form container, not a table id;
+            // the table is the one owning this column binding, and the map is
+            // unambiguous in practice.
+            let column_key = parse_form_binding_key(&second)?;
+            let mut found = Vec::new();
+            for (table_id, columns) in table_column_names_by_id {
+                if let Some(column) = columns.get(&column_key) {
+                    let table = match table_name_by_id.get(table_id) {
+                        Some(table) => table.clone(),
+                        None => continue,
+                    };
+                    found.push((
+                        table_id.clone(),
+                        format!("Items.{table}.CurrentData.{column}"),
+                    ));
+                }
+            }
+            match found.as_slice() {
+                [(table_id, path)] => type_link_data_path_by_table_column
+                    .get(&(table_id.clone(), column_key.clone()))
+                    .cloned()
+                    .unwrap_or_else(|| path.clone()),
+                _ => {
+                    // The ready routes name the column by its own binding, and
+                    // the uuid is enough to find them.
+                    let uuid = column_key.rsplit('|').next().unwrap_or(&column_key);
+                    let mut routes = Vec::new();
+                    for ((table_key, candidate), path) in type_link_data_path_by_table_column {
+                        if candidate == &column_key || candidate.contains(uuid) || table_key.contains(uuid) {
+                            routes.push(path.clone());
+                        }
+                    }
+                    routes.sort();
+                    routes.dedup();
+                    match routes.as_slice() {
+                        [path] => path.clone(),
+                        _ => return None,
+                    }
+                }
+            }
+        };
+        links.push(FormChoiceParameterLink::new(name, data_path, value_change));
+    }
+    (index == fields.len()).then_some(links)
+}
+
 pub(super) fn form_input_field_top_level_offset(fields: &[&str]) -> usize {
     fields
         .get(6)
@@ -18568,6 +18669,7 @@ fn parse_exact_1c_quoted_string(field: &str) -> Option<String> {
 }
 
 #[cfg(test)]
+
 pub(super) fn parse_form_input_field_choice_parameter_links(
     primary: &str,
     duplicate: &str,
@@ -18936,6 +19038,21 @@ pub(super) fn canonical_form_input_field_choice_parameter_links_with_metadata(
         };
         Some(duplicate)
     };
+    if primary.trim_start().starts_with("{5004,") {
+        if let Some(links) = parse_legacy_5004_choice_parameter_links(
+            primary,
+            table_name_by_id,
+            table_column_names_by_id,
+            type_link_data_path_by_table_column,
+            data_path_by_binding_key,
+        ) {
+            return if links.is_empty() {
+                FormChoiceParameterLinks::Empty
+            } else {
+                FormChoiceParameterLinks::Typed(links)
+            };
+        }
+    }
     match parse_form_input_field_choice_parameter_links_with_metadata(
         primary,
         duplicate,
