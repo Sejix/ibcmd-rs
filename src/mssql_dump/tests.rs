@@ -80742,7 +80742,6 @@ fn attribute_type_pattern_resolves_catalog_object() {
 }
 
 #[test]
-#[ignore = "reproduces the missing DataPath on a wrapper-33 form"]
 fn v33_form_writes_standard_attribute_data_path() {
     use std::collections::BTreeMap;
     let text = include_str!("fixtures/form_v33_data_path.txt");
