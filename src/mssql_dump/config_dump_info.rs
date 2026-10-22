@@ -1134,6 +1134,54 @@ fn format_config_dump_info_xml(
 mod tests {
     use super::*;
 
+    /// The table of an external data source is named by its owner's collection
+    /// entry: `{<Tables collection>,<count>,<uuid>}`. The row itself carries no
+    /// owner reference.
+    #[test]
+    fn external_data_source_table_gets_its_owner_from_the_collection() {
+        let owner_uuid = "9565660f-9e2b-48f4-8b45-6dd6bbfa04c2";
+        let table_uuid = "78afc3f6-2d63-4482-a33e-fd11f668c2b6";
+        let rows = vec![
+            MetadataTextRow {
+                file_name: owner_uuid.to_owned(),
+                text: format!(
+                    "{{1,{{2,{{0,{{3,{{1,0,{owner_uuid}}},\"ВнешнийИсточникДанных1\",{{0}},\"\",0,0}}}}}}}},3,{{e3403acd-1c95-421b-87e4-4dfa29d38b52,1,{table_uuid}}}}}"
+                ),
+                object_code: None,
+                header: Some(MetadataHeader {
+                    uuid: owner_uuid.to_owned(),
+                    name: "ВнешнийИсточникДанных1".to_owned(),
+                    synonyms: Vec::new(),
+                    comment: String::new(),
+                    template_type_code: None,
+                }),
+                kind: Some("ExternalDataSource".to_owned()),
+                folder: None,
+            },
+            MetadataTextRow {
+                file_name: table_uuid.to_owned(),
+                text: String::new(),
+                object_code: None,
+                header: Some(MetadataHeader {
+                    uuid: table_uuid.to_owned(),
+                    name: "oc_product_to_1c".to_owned(),
+                    synonyms: Vec::new(),
+                    comment: String::new(),
+                    template_type_code: None,
+                }),
+                kind: None,
+                folder: None,
+            },
+        ];
+
+        let mut refs = BTreeMap::new();
+        add_external_data_source_table_references(&mut refs, &rows);
+        assert_eq!(
+            refs.get(table_uuid).map(String::as_str),
+            Some("ExternalDataSource.ВнешнийИсточникДанных1.Table.oc_product_to_1c")
+        );
+    }
+
     #[test]
     fn dynamic_update_service_marker_is_not_an_object_inventory_entry() {
         let versions = vec![ConfigVersionEntry {
