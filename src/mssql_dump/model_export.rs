@@ -451,13 +451,30 @@ impl ModelExport {
                     }
                 }
             }
-            let Some(header) = texts_by_name
+            // A nested subsystem's row is not in `texts` (it is owned, not
+            // top-level), so its header is read from the stored row itself.
+            let header_name = texts_by_name
                 .get(uuid.as_str())
                 .and_then(|row| row.header.as_ref())
-            else {
+                .map(|header| header.name.clone())
+                .or_else(|| {
+                    raw_by_name
+                        .get(uuid.as_str())
+                        .and_then(|raw| raw_row_text(raw).ok())
+                        .and_then(|text| parse_row(&text).ok())
+                        .and_then(|tree| object_names(kind, &tree).ok())
+                        .map(|names| {
+                            names
+                                .full_name
+                                .split_once('.')
+                                .map(|(_, name)| name.to_string())
+                                .unwrap_or(names.full_name)
+                        })
+                });
+            let Some(header_name) = header_name else {
                 continue;
             };
-            index.set_name(uuid, &format!("{owner_name}.{kind}.{}", header.name));
+            index.set_name(uuid, &format!("{owner_name}.{kind}.{header_name}"));
             report.owned_names += 1;
         }
         // While some kind's rows cannot name themselves: what the owners'
