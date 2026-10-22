@@ -2269,6 +2269,10 @@ pub(super) enum FormSchemaWriteError {
     OpaqueChoiceParameterLinks {
         primary_slot: usize,
         duplicate_slot: usize,
+        /// Which cross-check failed (`primary_malformed`, `mirror_mismatch`, …).
+        reason: &'static str,
+        /// The first characters of the primary member, for diagnosis.
+        primary_head: String,
     },
     OpaqueChoiceParameterAvailableTypes {
         slot: usize,
@@ -2430,6 +2434,14 @@ fn validate_form_choice_list_writer_rules(
                     return Err(FormSchemaWriteError::OpaqueChoiceParameterLinks {
                         primary_slot: value.primary_slot,
                         duplicate_slot: value.duplicate_slot,
+                        reason: form_choice_parameter_links_parse_error_class(&value.error),
+                        primary_head: value
+                            .primary_raw
+                            .as_deref()
+                            .unwrap_or("")
+                            .chars()
+                            .take(120)
+                            .collect(),
                     });
                 }
             }
@@ -2661,6 +2673,14 @@ pub(super) fn validate_canonical_form_choice_parameter_links(
             Err(FormSchemaWriteError::OpaqueChoiceParameterLinks {
                 primary_slot: value.primary_slot,
                 duplicate_slot: value.duplicate_slot,
+                reason: form_choice_parameter_links_parse_error_class(&value.error),
+                primary_head: value
+                    .primary_raw
+                    .as_deref()
+                    .unwrap_or("")
+                    .chars()
+                    .take(120)
+                    .collect(),
             })
         }
     }
@@ -37422,6 +37442,14 @@ pub(super) fn format_form_choice_parameter_cluster_xml(
                     return Err(FormSchemaWriteError::OpaqueChoiceParameterLinks {
                         primary_slot: value.primary_slot,
                         duplicate_slot: value.duplicate_slot,
+                        reason: form_choice_parameter_links_parse_error_class(&value.error),
+                        primary_head: value
+                            .primary_raw
+                            .as_deref()
+                            .unwrap_or("")
+                            .chars()
+                            .take(120)
+                            .collect(),
                     });
                 }
             },

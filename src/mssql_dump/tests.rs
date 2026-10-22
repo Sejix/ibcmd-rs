@@ -25955,6 +25955,8 @@ fn input_field_choice_parameter_links_keep_empty_and_malformed_states_distinct()
         Err(FormSchemaWriteError::OpaqueChoiceParameterLinks {
             primary_slot,
             duplicate_slot,
+            reason: "mirror_mismatch",
+            primary_head: r#"{5006,1,"Filter.Owner",1,{27},0}"#.to_string(),
         })
     );
     let cluster = CanonicalFormChoiceParameterCluster::new(
@@ -25967,6 +25969,8 @@ fn input_field_choice_parameter_links_keep_empty_and_malformed_states_distinct()
         Err(FormSchemaWriteError::OpaqueChoiceParameterLinks {
             primary_slot,
             duplicate_slot,
+            reason: "mirror_mismatch",
+            primary_head: r#"{5006,1,"Filter.Owner",1,{27},0}"#.to_string(),
         })
     );
 }
@@ -26809,6 +26813,8 @@ fn detailed_form_extraction_preserves_malformed_link_rejection_diagnostics() {
             duplicate_slot:
                 crate::form_schema::FormInputFieldExtendedOptionSlot::ChoiceParameterLinksDuplicate
                     .index(),
+            reason: "mirror_mismatch",
+            primary_head: r#"{5006,1,"Filter.Owner",1,{3},0}"#.to_string(),
         }
     );
     assert_eq!(diagnostics.len(), 2);
