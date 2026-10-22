@@ -7878,6 +7878,32 @@ fn parse_flowchart_picture_size(value: &str) -> Option<&'static str> {
 /// kind refuses the whole scheme rather than dropping the picture.
 fn parse_flowchart_picture(text: &str) -> Option<FlowchartPicture> {
     let fields = split_1c_braced_fields(text, 0)?;
+    // 8.5.1.1529 heads the embedded picture with `3` and stores the base64 at
+    // member 7 (`{3,3,{0},"",-1,-1,0,{{#base64:…}}}`, nine members).
+    if fields.first()?.trim() == "3" {
+        if fields.len() != 9
+            || fields.get(1)?.trim() != "3"
+            || split_1c_braced_fields(fields.get(2)?, 0)? != vec!["0"]
+        {
+            return None;
+        }
+        let mut payload = fields.get(7)?.trim();
+        let mut inner = split_1c_braced_fields(payload, 0)?;
+        while inner.len() == 1 && inner.first()?.trim_start().starts_with('{') {
+            payload = inner.first()?.trim();
+            inner = split_1c_braced_fields(payload, 0)?;
+        }
+        if inner.len() != 1 {
+            return None;
+        }
+        let encoded = inner.first()?.trim().strip_prefix("#base64:")?;
+        let data = crate::module_blob::decode_base64_mime(encoded)?;
+        return Some(FlowchartPicture::Embedded {
+            file_name: format!("Picture.{}", flowchart_picture_extension(&data)?),
+            data,
+            load_transparent: parse_flowchart_flag(fields.get(6)?)?,
+        });
+    }
     if fields.first()?.trim() != "4"
         || fields.get(3)?.trim() != "\"\""
         || fields.get(4)?.trim() != "-1"
