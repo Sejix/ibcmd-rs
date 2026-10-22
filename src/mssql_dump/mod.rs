@@ -7938,14 +7938,10 @@ fn parse_flowchart_picture(text: &str) -> Option<FlowchartPicture> {
             })
         }
         "3" => {
-            // 8.5.1.1529 writes the embedded picture without the two trailing
-            // members (`0` and the empty string) that the ERP corpus carries:
-            // `{3,3,{0},"",-1,-1,0,{<base64>}}` is the whole record there.
-            let long_layout = fields.len() == 10
-                && fields.get(8)?.trim() == "0"
-                && fields.get(9)?.trim() == "\"\"";
-            let short_layout = fields.len() == 8;
-            if !(long_layout || short_layout)
+            // The members after the payload are not read by the writer and
+            // vary across corpora (10 with `0`/empty, 9, 8); only the payload,
+            // the flag and the image itself matter.
+            if !(8..=10).contains(&fields.len())
                 || split_1c_braced_fields(fields.get(2)?, 0)? != vec!["0"]
             {
                 return None;
