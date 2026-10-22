@@ -8258,7 +8258,7 @@ fn parse_flowchart_font_tuple(text: &str) -> Option<FlowchartFont> {
             // The sized form comes under both markers (`{6,…}` and `{7,…}`)
             // and in two lengths; the sizeless `{7,3,0,1,100}` is told apart by
             // its own fixed members, not by the marker.
-            if matches!(fields.len(), 5 | 6) {
+            if matches!(fields.len(), 5 | 6 | 7) {
                 if fields.len() == 5
                     && fields.get(2)?.trim() == "0"
                     && fields.get(3)?.trim() == "1"

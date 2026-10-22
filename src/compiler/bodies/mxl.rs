@@ -196,6 +196,12 @@ fn decode_plain(
     let language = required_list(&fields[3], "MOXCEL language descriptor")?;
     // Revision 6 (бухгалтерия 3.0) stores the same short record as 8 and 9:
     // `{"ru","ru",1,1,"ru","Русский","Русский"}` is `count*3+4` members.
+    // Revisions below 12 store the language record without its closing `0`;
+    // `12` (the 8.3.27 corpus) is the one that carries it.
+    let short_language_record = fields[2]
+        .as_token()
+        .and_then(|token| token.trim().parse::<u32>().ok())
+        .is_some_and(|revision| revision < 12);
     let language_shape_ok = language.len() >= 5
         && required_token(&language[3], "MOXCEL language count")
             .ok()
@@ -203,8 +209,7 @@ fn decode_plain(
             .is_some_and(|count| {
                 count <= 64
                     && (language.len() == count * 3 + 5
-                        || (matches!(fields[2].as_token(), Some("5" | "6" | "8" | "9"))
-                            && language.len() == count * 3 + 4))
+                        || (short_language_record && language.len() == count * 3 + 4))
             });
     if !language_shape_ok {
         return Err(MxlCodecError::InvalidShape(
