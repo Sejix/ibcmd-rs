@@ -7881,6 +7881,16 @@ fn parse_flowchart_picture(text: &str) -> Option<FlowchartPicture> {
     // 8.5.1.1529 heads the embedded picture with `3` and stores the base64 at
     // member 7 (`{3,3,{0},"",-1,-1,0,{{#base64:…}}}`, nine members).
     if fields.first()?.trim() == "3" {
+        // The empty picture is the same head: `{3,0,{0},"",-1,-1,1,0}`.
+        if fields.get(1)?.trim() == "0" {
+            if fields.len() != 8
+                || split_1c_braced_fields(fields.get(2)?, 0)? != vec!["0"]
+                || fields.get(6)?.trim() != "1"
+            {
+                return None;
+            }
+            return Some(FlowchartPicture::Empty);
+        }
         if fields.len() != 9
             || fields.get(1)?.trim() != "3"
             || split_1c_braced_fields(fields.get(2)?, 0)? != vec!["0"]
@@ -8261,7 +8271,8 @@ fn parse_flowchart_font_tuple(text: &str) -> Option<FlowchartFont> {
     let mask = fields.get(2)?.trim().parse::<u32>().ok()?;
     // Only the five member bits below are evidenced; any other bit is a
     // member layout nothing in the corpus describes, so the font refuses.
-    if mask & !0b11_1110 != 0 {
+    // Bit 0 marks an explicit face name (`{6,1,63,{0},200,700,0,0,0,"Arial",1}`).
+    if mask & !0b11_1111 != 0 {
         return None;
     }
     let mut index = 4usize;
@@ -8278,11 +8289,27 @@ fn parse_flowchart_font_tuple(text: &str) -> Option<FlowchartFont> {
     let italic = member(8)?;
     let underline = member(16)?;
     let strikeout = member(32)?;
-    if fields.len() != index + 2 || fields.get(index)?.trim() != "1" {
+    let face_name = if mask & 1 != 0 {
+        let value = parse_1c_string(fields.get(index)?)?;
+        index += 1;
+        Some(value)
+    } else {
+        None
+    };
+    let (reference, kind_xml) = match face_name {
+        Some(name) => (name, "WindowsFont"),
+        None => (reference, kind_xml),
+    };
+    // The trailing `1` and the optional scale close the record; the sized
+    // record may omit the scale member.
+    let scale = if fields.len() == index + 1 && fields.get(index)?.trim() == "1" {
+        None
+    } else if fields.len() == index + 2 && fields.get(index)?.trim() == "1" {
+        let scale = fields.get(index + 1)?.trim();
+        (scale != "100").then(|| scale.to_string())
+    } else {
         return None;
-    }
-    let scale = fields.get(index + 1)?.trim();
-    let scale = (scale != "100").then(|| scale.to_string());
+    };
     let flag = |value: Option<&str>| -> Option<Option<bool>> {
         match value {
             None => Some(None),

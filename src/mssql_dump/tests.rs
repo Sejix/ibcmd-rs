@@ -80481,7 +80481,6 @@ fn form_root_read_only_uses_its_own_head_flag_and_native_xml_position() {
 }
 
 #[test]
-#[ignore = "reproduces the МакетКарты82 graphical-scheme refusal; enable while fixing"]
 fn graphical_scheme_82_parses() {
     use std::collections::{BTreeMap, BTreeSet};
     let text = include_str!("fixtures/graphical_scheme_82.txt");
