@@ -78,6 +78,31 @@ pub(crate) fn header(node: &Brace) -> Result<Header> {
     })
 }
 
+
+/// Like [`header`], but for descriptors whose header carries trailing
+/// reference pairs (`XDTOPackage` stores its namespace and type table behind
+/// the comment in the same tuple). Only the five leading slots are read, so
+/// the extra members do not matter.
+pub(crate) fn header_wide(node: &Brace) -> Result<Header> {
+    let items = list(node)?;
+    let tag = atom(items.first().ok_or_else(|| anyhow!("empty header"))?)?;
+    if !matches!(tag, "1" | "2" | "3") || items.len() < 7 {
+        bail!("not an md header: {}", short(node));
+    }
+    let identity = list(item(items, 1)?)?;
+    Ok(Header {
+        uuid: atom(
+            identity
+                .last()
+                .ok_or_else(|| anyhow!("empty md identity"))?,
+        )?
+        .to_string(),
+        name: string(item(items, 2)?)?.to_string(),
+        synonym: item(items, 3)?.clone(),
+        comment: string(item(items, 4)?)?.to_string(),
+    })
+}
+
 /// `Name`, `Synonym`, `Comment` of an md header (unprefixed, as every object
 /// and child object writes them).
 pub(crate) fn header_elements(header: &Header) -> Result<[Element; 3]> {

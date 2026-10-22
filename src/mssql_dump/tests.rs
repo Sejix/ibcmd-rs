@@ -80637,3 +80637,14 @@ fn accounting_catalog_row_yields_names_and_types() {
     assert_eq!(names.full_name, "Catalog.ДенежныеДокументы");
     assert!(!names.types.is_empty());
 }
+
+#[test]
+fn xdto_row_yields_a_name() {
+    let text = include_str!("fixtures/xdto_row.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let tree = crate::metadata_model::brace::parse_row(text.as_bytes()).expect("row parses");
+    let names = crate::metadata_model::export::object_names("XDTOPackage", &tree);
+    eprintln!("xdto names: {:?}", names.as_ref().map(|n| n.full_name.clone()));
+    let names = names.expect("xdto names parse");
+    assert_eq!(names.full_name, "XDTOPackage.Patch");
+}
