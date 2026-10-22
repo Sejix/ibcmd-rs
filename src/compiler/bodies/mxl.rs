@@ -203,7 +203,7 @@ fn decode_plain(
             .is_some_and(|count| {
                 count <= 64
                     && (language.len() == count * 3 + 5
-                        || (matches!(fields[2].as_token(), Some("6" | "8" | "9"))
+                        || (matches!(fields[2].as_token(), Some("5" | "6" | "8" | "9"))
                             && language.len() == count * 3 + 4))
             });
     if !language_shape_ok {

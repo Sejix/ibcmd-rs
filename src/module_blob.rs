@@ -25856,12 +25856,10 @@ fn parse_form_body_plain_v2(plain: &str) -> Result<Option<ParsedFormBodyBlob>> {
         revision: FormBodyRevision::V2,
         layout: plain[layout_range].trim().to_string(),
         module_text: String::new(),
-        trailing: fields
-            .iter()
-            .skip(2)
-            .map(|range| plain[range.clone()].trim().to_string())
-            .collect(),
-        trailing_fields: fields.len().saturating_sub(2),
+        // Revision 2 keeps the whole declaration in the layout field: there
+        // is no separate trailing block for a V3/V4 writer to read.
+        trailing: Vec::new(),
+        trailing_fields: 0,
     }))
 }
 
