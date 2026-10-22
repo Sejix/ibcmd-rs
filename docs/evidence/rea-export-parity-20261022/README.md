@@ -29,8 +29,8 @@ ibcmd-rs infobase config export --dbms=MSSQLServer --db-server=localhost `
 | Файлов у нативного | 1 961 |
 | Файлов у `ibcmd-rs` | 1 958 |
 | Общих | 1 958 |
-| Совпали побайтово (SHA-256) | **1 952** |
-| Различаются | **7** |
+| Совпали побайтово (SHA-256) | **1 953** |
+| Различаются | **6** |
 | Только у нативного | 2 (оба — внешний источник) |
 
 Раньше `ibcmd-rs` завершался с кодом −1:
@@ -56,7 +56,6 @@ ConfigDumpInfo has 1 entries without canonical routes
 | `DataProcessors\РабочийСтолОбращенийТП\Templates\Обращение\Ext\Template.xml` | 2 | 1 | `<textColor>style:FieldTextColor</textColor>` |
 | `DataProcessors\ТелеграмОбновлениеВерсии.xml` | 4 | 4 | `<xr:Ref>0:3b2a508b-…</xr:Ref>` |
 | `Subsystems\Проекты.xml` | 1 | 1 | ссылка на таблицу внешнего источника: у нативного UUID, у нас `ExternalDataSource.…Table.…` |
-| `Catalogs\узСпринты\Forms\ФормаЭлемента\Ext\Form.xml` | 1 | 0 | `<MainTable>1:33ee2945-…</MainTable>` |
 | `DataProcessors\БотТелеграм\Forms\Форма\Ext\Form.xml` | 1 | 0 | `<TitleDataPath>1/0:dff8c7e9-…/100000000</TitleDataPath>` |
 
 ## Что это значит

@@ -1533,6 +1533,11 @@ pub(super) struct FormDynamicListSettings {
     pub(super) dynamic_data_read_explicit: bool,
     pub(super) query_text: Option<String>,
     pub(super) main_table: Option<String>,
+    /// An `MDObjectRef` the name index cannot answer, spelled as the platform
+    /// spells an unnamed `{kind, uuid}` record: `1:<uuid>`. Kept apart from
+    /// `main_table` so the field-resolution rules still see a list without a
+    /// resolvable main table.
+    pub(super) main_table_unresolved: Option<String>,
     pub(super) explicit_fields: Vec<FormDynamicListField>,
     pub(super) fields: Vec<FormDynamicListField>,
     pub(super) server_state_xml: Option<String>,
@@ -6136,6 +6141,7 @@ fn parse_form_dynamic_list_settings_with_dcs_type_index(
     let mut dynamic_data_read_explicit = false;
     let mut query_text = None;
     let mut main_table = None;
+    let mut main_table_unresolved = None;
     let mut main_table_category = None;
     let mut explicit_fields = Vec::new();
     let mut fields = Vec::new();
@@ -6152,7 +6158,14 @@ fn parse_form_dynamic_list_settings_with_dcs_type_index(
             .unwrap_or_default();
         match key.as_str() {
             "QueryText" => query_text = parse_form_setting_string(window[1]),
-            "MainTable" => main_table = parse_form_main_table_ref(window[1], object_refs),
+            "MainTable" => match parse_form_main_table_ref(window[1], object_refs) {
+                Some(table) if !table.contains('.') => {
+                    // Unnamed `MDObjectRef` records keep the platform's
+                    // `kind:uuid` spelling, kind 1 for this reference type.
+                    main_table_unresolved = Some(format!("1:{table}"));
+                }
+                other => main_table = other,
+            },
             "MainTableCategory" => main_table_category = parse_form_setting_number(window[1]),
             "Field" => {
                 let parsed_fields = parse_form_dynamic_list_fields(window[1]);
@@ -6274,6 +6287,7 @@ fn parse_form_dynamic_list_settings_with_dcs_type_index(
         dynamic_data_read_explicit,
         query_text,
         main_table,
+        main_table_unresolved,
         explicit_fields,
         fields,
         server_state_xml,
@@ -10203,9 +10217,19 @@ pub(super) fn parse_form_main_table_ref(
     if fields.first().map(|value| value.trim()) != Some("\"#\"") {
         return None;
     }
-    fields.iter().skip(1).find_map(|value| {
+    let resolved = fields.iter().skip(1).find_map(|value| {
         parse_non_zero_uuid(value).and_then(|uuid| object_refs.get(&uuid).cloned())
-    })
+    });
+    if resolved.is_some() {
+        return resolved;
+    }
+    // The name index cannot answer the reference: keep the identifier so the
+    // caller can write the platform's `1:<uuid>` spelling.
+    fields
+        .iter()
+        .skip(1)
+        .filter_map(|value| parse_non_zero_uuid(value))
+        .find(|uuid| uuid != "fc01b5df-97fe-449b-83d4-218a090e681e")
 }
 
 /// The metadata object a command button hands its command, spelled as the
@@ -37603,7 +37627,11 @@ fn format_form_attributes_items_xml_with_dcs_profiles(
                     xml.push_str("\t\t\t\t</Field>\r\n");
                 }
             }
-            if let Some(main_table) = &settings.main_table {
+            if let Some(main_table) = settings
+                .main_table
+                .as_ref()
+                .or(settings.main_table_unresolved.as_ref())
+            {
                 xml.push_str(&format!(
                     "\t\t\t\t<MainTable>{}</MainTable>\r\n",
                     escape_xml_text(main_table)

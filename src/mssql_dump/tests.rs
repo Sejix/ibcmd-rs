@@ -10568,6 +10568,7 @@ fn formats_dynamic_list_server_state_xml_in_settings() {
                 dynamic_data_read_explicit: true,
                 query_text: Some("ВЫБРАТЬ".to_string()),
                 main_table: Some("Catalog.Товары".to_string()),
+                main_table_unresolved: None,
                 explicit_fields: Vec::new(),
                 fields: Vec::new(),
                 server_state_xml: Some(
@@ -10606,6 +10607,7 @@ fn fills_default_dynamic_list_list_settings_ids_and_view_modes() {
         dynamic_data_read_explicit: false,
         query_text: None,
         main_table: Some("Document.СчетНаОплату".to_string()),
+        main_table_unresolved: None,
         explicit_fields: Vec::new(),
         fields: Vec::new(),
         server_state_xml: None,
@@ -10837,6 +10839,27 @@ fn restores_accumulation_register_balance_main_table_from_raw_category() {
         normalize_form_main_table_category(Some("Task.TaskD".to_string()), Some("invalid"))
             .as_deref(),
         Some("Task.TaskD")
+    );
+}
+
+/// An `MDObjectRef` the name index cannot answer keeps the platform's
+/// `kind:uuid` spelling instead of disappearing. The record is the real shape
+/// of `Catalogs/узСпринты/Forms/ФормаЭлемента` `ТЧЗадачи`: a typed reference to
+/// `33ee2945-…` that the metadata name index does not carry.
+#[test]
+fn unnamed_main_table_keeps_the_platforms_kind_uuid_spelling() {
+    const TYPE_ID: &str = "fc01b5df-97fe-449b-83d4-218a090e681e";
+    const TABLE_ID: &str = "33ee2945-a302-44ac-a8b6-152205a57775";
+    let raw_attribute = format!(
+        r##"{{9,{{17}},0,"ListA",{{1,0}},{{"Pattern",{{"#",65abad24-838b-4987-8b35-ed9e2bd4d9c8}}}},{{0,{{0,{{"B",1}},0}}}},{{0,{{0,{{"B",1}},0}}}},{{0,0}},{{0,0}},0,0,0,0,{{0,4,"QueryText",{{"S","ВЫБРАТЬ 1"}},"ManualQuery",{{"B",1}},"MainTable",{{"#",{TYPE_ID},{TABLE_ID}}},"MainTableCategory",{{"N",1}}}},{{0,0}}}}"##
+    );
+    let attribute = parse_form_attribute(&raw_attribute, &BTreeMap::new(), &BTreeMap::new())
+        .expect("dynamic-list attribute");
+    let settings = attribute.settings.expect("dynamic-list settings");
+    assert_eq!(settings.main_table, None);
+    assert_eq!(
+        settings.main_table_unresolved.as_deref(),
+        Some("1:33ee2945-a302-44ac-a8b6-152205a57775")
     );
 }
 
@@ -11286,6 +11309,7 @@ fn adds_platform_default_filter_without_overwriting_custom_list_settings() {
         dynamic_data_read_explicit: false,
         query_text: None,
         main_table: Some("Document.ЖурналБилетовИБронирований".to_string()),
+        main_table_unresolved: None,
         explicit_fields: Vec::new(),
         fields: Vec::new(),
         server_state_xml: None,
@@ -11808,6 +11832,7 @@ fn formats_explicit_false_dynamic_data_read() {
             dynamic_data_read_explicit: true,
             query_text: None,
             main_table: Some("Catalog.Товары".to_string()),
+            main_table_unresolved: None,
             explicit_fields: Vec::new(),
             fields: Vec::new(),
             server_state_xml: None,
@@ -13269,6 +13294,7 @@ fn table_schema_trace_completion_is_end_to_end_fail_closed_and_matches_renderer(
                 dynamic_data_read_explicit: false,
                 query_text: None,
                 main_table: None,
+                main_table_unresolved: None,
                 explicit_fields: Vec::new(),
                 fields: Vec::new(),
                 server_state_xml: None,
@@ -70128,6 +70154,7 @@ fn data_path_dynamic_list_settings(fields: Vec<FormDynamicListField>) -> FormDyn
         dynamic_data_read_explicit: false,
         query_text: None,
         main_table: None,
+        main_table_unresolved: None,
         explicit_fields: Vec::new(),
         fields,
         server_state_xml: None,
