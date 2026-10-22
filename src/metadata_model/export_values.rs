@@ -59,12 +59,19 @@ pub(crate) fn header(node: &Brace) -> Result<Header> {
     let tag = atom(items.first().ok_or_else(|| anyhow!("empty header"))?)?;
     // Owned legacy forms carry ten members (two version scalars after the
     // comment); the first five slots are the same in every shape.
-    if !matches!(tag, "2" | "3") || !matches!(items.len(), 8 | 9 | 10) {
+    // Roles and other "simple" owners open with `1` and an identity of three
+    // members (`{0,0,<uuid>}`); the modern shape is `3`, the legacy `2`.
+    if !matches!(tag, "1" | "2" | "3") || !matches!(items.len(), 8 | 9 | 10) {
         bail!("not an md header: {}", short(node));
     }
     let identity = list(item(items, 1)?)?;
     Ok(Header {
-        uuid: atom(item(identity, 2)?)?.to_string(),
+        uuid: atom(
+            identity
+                .last()
+                .ok_or_else(|| anyhow!("empty md identity"))?,
+        )?
+        .to_string(),
         name: string(item(items, 2)?)?.to_string(),
         synonym: item(items, 3)?.clone(),
         comment: string(item(items, 4)?)?.to_string(),
