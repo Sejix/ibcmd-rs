@@ -3267,19 +3267,29 @@ fn write_source_asset_inner(
                 .ok()
                 .map(|text| text.trim_start_matches('\u{feff}').trim_start())
                 .filter(|text| looks_like_graphical_scheme_blob_text(text));
-            if let Some(text) = text {
+            if let Some(raw) = text {
                 // The 8.5 colour and font tuples a scheme may be stored in
                 // (`parse_business_process_flowchart_blob`, same grammar).
                 let converted =
-                    super::form::layout_8_5_1::down_convert_primitives_8_5_1_text(text).ok();
-                let text = converted.as_deref().unwrap_or(text);
-                let flowchart = parse_business_process_flowchart_text_with_types(
-                    text,
-                    context.object_refs,
-                    context.metadata_object_refs,
-                    context.type_index,
-                    context.type_index_collisions,
-                )
+                    super::form::layout_8_5_1::down_convert_primitives_8_5_1_text(raw).ok();
+                let converted_text = converted.as_deref().unwrap_or(raw);
+                let parse = |text: &str| {
+                    parse_business_process_flowchart_text_with_types(
+                        text,
+                        context.object_refs,
+                        context.metadata_object_refs,
+                        context.type_index,
+                        context.type_index_collisions,
+                    )
+                };
+                // The down-conversion rewrites 8.5 tuples throughout the body,
+                // inside the scheme's embedded pictures too; where it changes
+                // the grammar's own arithmetic, the original text is the one
+                // the parser still understands.
+                let flowchart = parse(converted_text)
+                    .or_else(|| {
+                        (converted_text != raw).then(|| parse(raw)).flatten()
+                    })
                 .with_context(|| {
                     format!(
                         "failed to extract graphical scheme from source asset {}",

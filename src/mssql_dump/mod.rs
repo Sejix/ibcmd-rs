@@ -7822,8 +7822,10 @@ fn parse_flowchart_item_style(
     object_refs: &BTreeMap<String, String>,
 ) -> Option<FlowchartItemStyle> {
     let fields = split_1c_braced_fields(text, 0)?;
+    // Kind `6` is the same fourteen-member record: МакетКарты82 stores its
+    // decorations with it, and the platform publishes them like kind `7`.
     if fields.len() != 14
-        || fields.first()?.trim() != "7"
+        || !matches!(fields.first()?.trim(), "6" | "7")
         || fields.get(12)?.trim() != "0"
         || fields.get(13)?.trim() != "0"
     {
@@ -8039,11 +8041,18 @@ fn parse_flowchart_decoration_graphics(
     text: &str,
     object_refs: &BTreeMap<String, String>,
 ) -> Option<FlowchartItemProperties> {
-    let outer = split_1c_braced_fields(text, 0)?;
-    if outer.len() != 1 {
-        return None;
+    // Some 8.5 schemes wrap the decoration geometry one brace deeper
+    // (`{{{7,…}}}`); unwrap single-member levels before reading it.
+    let mut current = text.trim();
+    loop {
+        let level = split_1c_braced_fields(current, 0)?;
+        if level.len() == 1 && level.first()?.trim_start().starts_with('{') {
+            current = level.first()?.trim();
+        } else {
+            break;
+        }
     }
-    let geometry = split_1c_braced_fields(outer.first()?, 0)?;
+    let geometry = split_1c_braced_fields(current, 0)?;
     if geometry.len() != 12
         || geometry.get(1)?.trim() != "6"
         || !matches!(geometry.get(8)?.trim(), "0" | "1")
