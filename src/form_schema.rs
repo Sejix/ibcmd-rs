@@ -3851,6 +3851,10 @@ const FORM_PLANNER_BEFORE_CREATE_EVENT_UUID: &str = "2c8ad9e0-53f0-406d-9c8b-460
 const FORM_PLANNER_ON_CURRENT_REPRESENTATION_PERIOD_CHANGE_EVENT_UUID: &str =
     "5e6c8466-44d0-4fd0-8d87-ac749c16ff60";
 const FORM_PLANNER_ON_EDIT_END_EVENT_UUID: &str = "68fc3ed6-a517-4843-a7a4-473cf4e27209";
+/// `DataProcessors/ТаймТрекер/Forms/Форма` `Планировщик`: the native element
+/// names this identifier `DimensionItemClick`.
+const FORM_PLANNER_DIMENSION_ITEM_CLICK_EVENT_UUID: &str =
+    "53d8653f-e73c-44f4-957c-0ecc97f3ed89";
 const FORM_PLANNER_BEFORE_DELETE_EVENT_UUID: &str = "6f758c30-b414-4949-a236-584bccb0102a";
 const FORM_PLANNER_BEFORE_START_EDIT_EVENT_UUID: &str = "82f5f464-5aa5-4efc-9813-51432c74ff8e";
 const FORM_PLANNER_BEFORE_START_QUICK_EDIT_EVENT_UUID: &str =
@@ -3863,6 +3867,12 @@ impl FormChildItemEventCollectionSchema {
         _field_schema: FormFieldSchema,
         item_tag: &str,
     ) -> Option<Self> {
+        Self::for_item_tag(item_tag)
+    }
+
+    /// The collection a tag's options tuple keeps its event record in, without
+    /// needing the tag's field schema (the schema is not consulted).
+    pub(crate) fn for_item_tag(item_tag: &str) -> Option<Self> {
         let (owner, collection_slot) = match item_tag {
             "LabelField" => (FormChildItemEventCollectionOwner::LabelField, 12),
             "PictureField" => (FormChildItemEventCollectionOwner::PictureField, 16),
@@ -4082,6 +4092,10 @@ impl FormChildItemEventCollectionSchema {
                 (FORM_ITEM_DRAG_START_EVENT_UUID, "DragStart"),
                 (FORM_ITEM_DRAG_END_EVENT_UUID, "DragEnd"),
                 (FORM_PLANNER_BEFORE_CREATE_EVENT_UUID, "BeforeCreate"),
+                (
+                    FORM_PLANNER_DIMENSION_ITEM_CLICK_EVENT_UUID,
+                    "DimensionItemClick",
+                ),
                 (
                     FORM_PLANNER_ON_CURRENT_REPRESENTATION_PERIOD_CHANGE_EVENT_UUID,
                     "OnCurrentRepresentationPeriodChange",

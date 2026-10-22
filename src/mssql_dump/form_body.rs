@@ -1961,6 +1961,9 @@ pub(super) struct FormChildItem {
     pub(super) skip_on_input: Option<bool>,
     pub(super) strict_table_schema: bool,
     pub(super) title_location: Option<&'static str>,
+    /// `PlannerField`'s `<DimensionItemHyperlink>`: member 9 of its `1`
+    /// options tuple.
+    pub(super) dimension_item_hyperlink: bool,
     pub(super) title_height: Option<String>,
     pub(super) tooltip_representation: Option<&'static str>,
     pub(super) warning_on_edit_representation: Option<FormWarningOnEditRepresentation>,
@@ -14765,6 +14768,7 @@ fn parse_form_child_item_with_metadata_owners(
             None
         },
         strict_table_schema: table_schema.is_some(),
+        dimension_item_hyperlink: tag == "PlannerField" && parse_form_planner_hyperlink(&fields),
         title_location: title_location_schema
             .and_then(|schema| schema.title_location(&fields))
             .or_else(|| table_schema.and_then(|schema| schema.title_location(&fields))),
@@ -16331,6 +16335,19 @@ fn parse_form_child_item_with_metadata_owners(
             // cannot name the row-editing events it carries.
             let names_events = tag != "Table" || data_path_resolution.is_some();
             let mut events = parse_form_child_item_event_fields(&fields, names_events);
+            if tag == "PlannerField" {
+                let mut nested = parse_form_nested_event_records(&fields, names_events);
+                let collection =
+                    crate::form_schema::FormChildItemEventCollectionSchema::for_item_tag(tag);
+                for event in &mut nested {
+                    if let Some(name) =
+                        collection.and_then(|collection| collection.event_name(&event.name))
+                    {
+                        event.name = name.to_string();
+                    }
+                }
+                append_unique_form_body_events(&mut events, nested);
+            }
             append_unique_form_body_events(
                 &mut events,
                 parse_form_schema_backed_child_item_events(
@@ -23786,6 +23803,64 @@ pub(super) fn collect_form_nested_child_item_event_records(
         );
         collect_form_nested_child_item_event_records(&nested, events);
     }
+}
+
+/// `PlannerField`'s `<DimensionItemHyperlink>`, member 9 of the `{1,50,10,…}`
+/// options tuple: `1` on the one `ТаймТрекер` planner whose native element
+/// carries the property, `0` on the other three planners of the configuration.
+fn parse_form_planner_hyperlink(fields: &[&str]) -> bool {
+    for field in fields {
+        let Some(members) = split_1c_braced_fields(field.trim(), 0) else {
+            continue;
+        };
+        if members.len() >= 10
+            && members[0].trim() == "1"
+            && members[1].trim() == "50"
+            && members[2].trim() == "10"
+        {
+            return members[9].trim() == "1";
+        }
+    }
+    false
+}
+
+pub(super) fn parse_form_nested_event_records(
+    fields: &[&str],
+    names_events: bool,
+) -> Vec<FormBodyEvent> {
+    let mut events = Vec::new();
+    for field in fields {
+        let Some(members) = split_1c_braced_fields(field.trim(), 0) else {
+            continue;
+        };
+        for member in members {
+            let Some(nested) = split_1c_braced_fields(member.trim(), 0) else {
+                continue;
+            };
+            let count = nested
+                .first()
+                .and_then(|value| value.trim().parse::<usize>().ok())
+                .unwrap_or(0);
+            // The record is `<count>,<event id>,"<handler>",…`.
+            if count == 0
+                || nested.len() < 1 + count * 2
+                || !(1..=count * 2).any(|index| {
+                    nested
+                        .get(index)
+                        .and_then(|value| parse_1c_quoted_string_with_len(value.trim()))
+                        .is_some()
+                })
+            {
+                continue;
+            }
+            let head = parse_form_child_item_event_record(&nested, names_events);
+            append_unique_form_body_events(
+                &mut events,
+                interleave_form_child_item_event_bindings(&nested, names_events, head),
+            );
+        }
+    }
+    events
 }
 
 pub(super) fn parse_form_child_item_event_pair(
@@ -33571,6 +33646,7 @@ pub(super) fn format_form_child_item_xml(
             ));
         }
     }
+
     // `TitleFont` follows the title block on every owner that writes it (native
     // `Title` before `TitleFont` on all 11 owners, never the reverse).  The
     // owners whose title is written further down - `Table`, `Page`, `Popup`,
@@ -35941,6 +36017,13 @@ pub(super) fn format_form_child_item_xml(
                 xml_bool(value)
             ));
         }
+    }
+    // `PlannerField` writes `<DimensionItemHyperlink>` behind its scalar run,
+    // directly ahead of the context menu.
+    if item.tag == "PlannerField" && item.dimension_item_hyperlink {
+        xml.push_str(&format!(
+            "{tab}\t<DimensionItemHyperlink>true</DimensionItemHyperlink>\r\n"
+        ));
     }
     if !direct_context_menu_xml.is_empty() {
         xml.push_str(&direct_context_menu_xml);
