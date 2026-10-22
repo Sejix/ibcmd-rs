@@ -258,3 +258,23 @@ revision 2
 либо разбор её layout, либо явный откат на legacy-конвертер (он эти формы уже
 пишет — в логах модели такие строки помечены «the legacy converter writes
 it»). Предпочтителен второй путь до появления доказательств раскладки.
+
+### Раунд 46: ревизия 2 читается; дальше условное оформление
+
+Разбор формы ревизии 2 добавлен: маркер `2`, весь остаток после него — одно
+поле layout, отдельного слота текста модуля нет (`FormBodyRevision::V2`,
+`parse_form_body_plain_v2`). Форма больше не обрывает выгрузку на ревизии.
+
+Следующий барьер этой же формы:
+
+```
+form source asset ...Form.xml was rejected:
+OpaqueDcsFormAttributesConditionalAppearance {
+  reason: "malformed Form Attributes conditional-appearance physical tail"
+}
+```
+
+То есть layout разобран, но writer отказал на разборе условного оформления
+реквизитов формы. Нужно снять его раскладку с этого легаси-layout.
+
+Тесты 4052, ноль падений.
