@@ -80764,3 +80764,22 @@ fn v33_form_writes_standard_attribute_data_path() {
     );
     assert!(xml.contains("<DataPath>Объект.Description</DataPath>"), "{xml}");
 }
+
+#[test]
+#[ignore = "reproduces raw N:uuid command names on a root-42 form"]
+fn root42_form_resolves_its_commands() {
+    use std::collections::BTreeMap;
+    let text = include_str!("fixtures/form_root42_commands.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let body = crate::module_blob::parse_form_body_plain(text).expect("body parses");
+    let xml = super::extract_form_body_xml_from_body(&body, &BTreeMap::new(), &BTreeMap::new())
+        .expect("xml");
+    let raw = xml.matches("<CommandName>").count()
+        - xml.matches("<CommandName>Form.").count()
+        - xml.matches("<CommandName>0:").count();
+    eprintln!(
+        "raw command names: {raw} declared commands: {}",
+        xml.matches("<Command name=").count()
+    );
+    assert!(xml.contains("<CommandName>Form.Command.ПроверитьШаблон</CommandName>"), "{raw}");
+}
