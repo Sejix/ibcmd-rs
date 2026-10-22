@@ -31,23 +31,21 @@
 
 ## Базовый замер (ServiceDesk 3.10.28, платформа 8.5.1.1529)
 
-Экспорт без fail-closed: 1961 строка, код 0, побайтово совпало 1953.
+Экспорт без fail-closed: 1961 строка, код 0, побайтово совпало 1954.
 
-Fallback'и модели — **2 строки** (единственные места, где модель уступает
+Fallback'и модели — **1 строка** (единственные места, где модель уступает
 legacy-конвертеру):
 
 | Строка | Причина |
 |---|---|
 | `9565660f-9e2b-48f4-8b45-6dd6bbfa04c2` | `ExternalDataSource requires the exact empty child collections` — модель умеет только пустой внешний источник |
-| `6e094be6-40b6-4c4d-91a6-44503948f690` | `no name for picture 3b2a508b-f36e-4e0b-9dc0-70b2b56276a9` — ссылка на картинку без имени |
 
 С `IBCMD_RS_FAIL_ON_MODEL_FALLBACK=1` тот же экспорт завершается кодом −1, и
 **одна ошибка перечисляет все строки**, а не первую:
 
 ```
-[ERROR] model export fell back on 2 row(s) with fail-closed enabled:
+[ERROR] model export fell back on 1 row(s) with fail-closed enabled:
 [ERROR]   9565660f-…: ExternalDataSource requires the exact empty child collections
-[ERROR]   6e094be6-…: no name for picture 3b2a508b-…
 ```
 
 Это и есть работающий инвариант: дырка не прячется за успешным деревом, и
@@ -59,8 +57,8 @@ legacy-конвертеру):
 |---|---|---|
 | XDTO | типы / свойства, извлечённые из `*_root.res` | 66 и 68 типов; 2405 и 2859 свойств (8.3.27 и 8.5.1) |
 | Порядок свойств формы | элементы корпуса, совпавшие с контрактом | 40 508 из 40 508 |
-| Модель | строки без fallback | 1959 из 1961 |
-| Модель, fail-closed | экспорт проходит при `IBCMD_RS_FAIL_ON_MODEL_FALLBACK=1` | нет: 2 строки |
+| Модель | строки без fallback | 1960 из 1961 |
+| Модель, fail-closed | экспорт проходит при `IBCMD_RS_FAIL_ON_MODEL_FALLBACK=1` | нет: 1 строка |
 | Storage | непрозрачные записи | 0 |
 
 Целевое состояние: 0 fallback'ов, 0 непрозрачных записей, экспорт проходит
