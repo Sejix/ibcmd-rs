@@ -57,7 +57,9 @@ pub(crate) fn header(node: &Brace) -> Result<Header> {
     // Modern rows open with `3`; legacy ones (Accounting 3.0 forms, templates
     // and their owners) open with `2` and carry one member less.
     let tag = atom(items.first().ok_or_else(|| anyhow!("empty header"))?)?;
-    if !matches!(tag, "2" | "3") || !matches!(items.len(), 8 | 9) {
+    // Owned legacy forms carry ten members (two version scalars after the
+    // comment); the first five slots are the same in every shape.
+    if !matches!(tag, "2" | "3") || !matches!(items.len(), 8 | 9 | 10) {
         bail!("not an md header: {}", short(node));
     }
     let identity = list(item(items, 1)?)?;
