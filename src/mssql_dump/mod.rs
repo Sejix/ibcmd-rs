@@ -7822,14 +7822,15 @@ fn parse_flowchart_item_style(
     object_refs: &BTreeMap<String, String>,
 ) -> Option<FlowchartItemStyle> {
     let fields = split_1c_braced_fields(text, 0)?;
-    // Kind `6` is the same fourteen-member record: МакетКарты82 stores its
-    // decorations with it, and the platform publishes them like kind `7`.
-    if fields.len() != 14
-        || !matches!(fields.first()?.trim(), "6" | "7")
-        || fields.get(12)?.trim() != "0"
-        || fields.get(13)?.trim() != "0"
-    {
-        return None;
+    // Kind `7` is the fourteen-member record; kind `6` is the same record one
+    // member shorter (13), as `МакетКарты82` stores its decorations.
+    match fields.first()?.trim() {
+        "7" if fields.len() == 14
+            && fields.get(12).map(|value| value.trim()) == Some("0")
+            && fields.get(13).map(|value| value.trim()) == Some("0") => {}
+        "6" if fields.len() == 13
+            && fields.get(12).map(|value| value.trim()) == Some("0") => {}
+        _ => return None,
     }
     Some(FlowchartItemStyle {
         back_color: parse_flowchart_color(fields.get(1)?, object_refs)?,
