@@ -22481,6 +22481,7 @@ pub(super) fn form_child_item_tag(wrapper: &str, fields: &[&str]) -> Option<&'st
         },
         "73" => Some("Table"),
         "55" => Some("Table"),
+        "50" => Some("Table"),
         _ => None,
     }
 }
@@ -22548,7 +22549,7 @@ pub(super) fn parse_form_child_item_name(wrapper: &str, fields: &[&str]) -> Opti
             .filter(|value| !value.is_empty());
     }
     let indexes: &[usize] = match wrapper {
-        "73" | "55" => &[5],
+        "73" | "55" | "50" => &[5],
         "31" | "34" => &[5, 6],
         "35" | "37" | "48" => &[6, 7],
         _ => &[6],
@@ -22846,7 +22847,7 @@ fn form_braced_leading_member(field: &str) -> Option<(&str, u8)> {
 /// [`form_child_item_tag`] names, and the older revisions
 /// `form_item_record_canonical_revision` normalizes to one of them.
 const FORM_CHILD_ITEM_LEADING_MEMBERS: &[&str] = &[
-    "5", "6", "11", "12", "22", "29", "30", "31", "34", "35", "37", "48", "54", "55", "73",
+    "5", "6", "11", "12", "22", "29", "30", "31", "34", "35", "37", "48", "50", "54", "55", "73",
 ];
 
 /// Whether a member could be a child-item record, by its leading member.

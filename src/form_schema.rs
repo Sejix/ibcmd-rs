@@ -8553,15 +8553,18 @@ impl FormTableSchema {
     const REFRESH_REQUEST_REVERSE_OFFSET: usize = 16;
 
     pub(crate) fn from_raw_layout(wrapper: &str, item_tag: &str, fields: &[&str]) -> Option<Self> {
-        if wrapper != "55"
+        let legacy = wrapper == "50";
+        let expected = if legacy { "50" } else { "55" };
+        if (!legacy && wrapper != "55")
             || item_tag != "Table"
-            || fields.first().map(|field| field.trim()) != Some("55")
+            || fields.first().map(|field| field.trim()) != Some(expected)
             || fields.len() < Self::BASE_FIELD_COUNT
         {
             return None;
         }
         // The suffix combines several paired sections; the bag at slot 54 is only one of them.
-        if (fields.len() - Self::BASE_FIELD_COUNT) % 2 != 0 {
+        // The root-42 table record carries one extra member, so its parity differs.
+        if !legacy && (fields.len() - Self::BASE_FIELD_COUNT) % 2 != 0 {
             return None;
         }
 

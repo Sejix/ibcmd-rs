@@ -80784,7 +80784,6 @@ fn root42_form_resolves_its_commands() {
 }
 
 #[test]
-#[ignore = "reproduces dropped tag-50 tables on a root-42 form"]
 fn root42_form_keeps_its_tables() {
     use std::collections::BTreeMap;
     let text = include_str!("fixtures/form_root42_commands.txt");
