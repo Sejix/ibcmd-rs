@@ -80625,3 +80625,15 @@ fn mxl_legacy_absolute_fonts_parse() {
     assert_eq!(sheet.fonts[0].bold, Some(true));
     assert_eq!(sheet.fonts[1].height.as_deref(), Some("8"));
 }
+
+#[test]
+fn accounting_catalog_row_yields_names_and_types() {
+    let text = include_str!("fixtures/catalog_row_accounting.txt");
+    let text = text.trim_start_matches('\u{feff}');
+    let tree = crate::metadata_model::brace::parse_row(text.as_bytes()).expect("row parses");
+    let names = crate::metadata_model::export::object_names("Catalog", &tree);
+    eprintln!("names: {:?}", names.as_ref().map(|n| (n.full_name.clone(), n.types.len())));
+    let names = names.expect("catalog names parse");
+    assert_eq!(names.full_name, "Catalog.ДенежныеДокументы");
+    assert!(!names.types.is_empty());
+}

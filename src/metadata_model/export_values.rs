@@ -61,7 +61,7 @@ pub(crate) fn header(node: &Brace) -> Result<Header> {
     // comment); the first five slots are the same in every shape.
     // Roles and other "simple" owners open with `1` and an identity of three
     // members (`{0,0,<uuid>}`); the modern shape is `3`, the legacy `2`.
-    if !matches!(tag, "1" | "2" | "3") || !matches!(items.len(), 8 | 9 | 10) {
+    if !matches!(tag, "1" | "2" | "3") || !matches!(items.len(), 7 | 8 | 9 | 10) {
         bail!("not an md header: {}", short(node));
     }
     let identity = list(item(items, 1)?)?;
