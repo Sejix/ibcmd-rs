@@ -2166,6 +2166,29 @@ fn parse_moxel_spreadsheet_text_with_line_trace(
             row.columns_id = Some(columns_id.clone());
         }
     }
+    // The row-to-column-set map also names rows the cell areas do not: an
+    // empty row that only carries its `<columnsID>` (Accounting 3.0
+    // `CommonTemplates/ПФ_MXL_ТОРГ13` row 35) has no cells and no record of
+    // its own, and the map is the only place it is stated.
+    let known = rows.iter().map(|row| row.index).collect::<std::collections::BTreeSet<_>>();
+    let missing = row_column_ids
+        .keys()
+        .filter(|index| !known.contains(index))
+        .copied()
+        .collect::<Vec<_>>();
+    if !missing.is_empty() {
+        for index in missing {
+            rows.push(MoxelRow {
+                index,
+                index_to: None,
+                format_index: 1,
+                source_format_index: Some(1),
+                columns_id: row_column_ids.get(&index).cloned(),
+                cells: Vec::new(),
+            });
+        }
+        rows.sort_by_key(|row| row.index);
+    }
     compact_moxel_empty_row_ranges(&mut rows);
     let fonts = parse_moxel_fonts(&fields, object_refs);
     let pictures = parse_moxel_pictures(&fields, object_refs);
