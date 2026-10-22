@@ -11885,7 +11885,13 @@ mod tests {
             Some("{3,3,{0,757b547b-b79c-459a-a64a-eef19a09a38f}}")
         );
         // A spelling the writer cannot place is refused, not defaulted.
-        assert_eq!(format_native_color(Some("web:Chartreuse"), none), None);
+        // The full platform palette now covers every CSS colour name, so an
+        // unknown spelling is a name outside that palette.
+        assert_eq!(
+            format_native_color(Some("web:Chartreuse"), none).as_deref(),
+            Some("{3,2,{15}}")
+        );
+        assert_eq!(format_native_color(Some("web:NotAColour"), none), None);
         assert_eq!(format_native_color(Some("style:Неизвестный"), none), None);
         assert_eq!(format_native_color(Some("#12345"), none), None);
     }
