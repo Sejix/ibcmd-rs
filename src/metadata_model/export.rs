@@ -241,6 +241,19 @@ pub fn decode_object(kind: &str, row: &Brace, context: &ExportContext) -> Result
         "Subsystem" | "Form" | "Template" | "CommonForm" => {
             super::common::forms_export::decode(kind, row, context)
         }
+        "Table" => {
+            let table = super::external_data_source_table::from_brace(row)?;
+            let full = context
+                .names
+                .name(&table.uuid)
+                .ok_or_else(|| anyhow!("no name for table {}", table.uuid))?;
+            let owner = full
+                .strip_prefix("ExternalDataSource.")
+                .and_then(|rest| rest.split_once(".Table."))
+                .map(|(owner, _)| owner)
+                .ok_or_else(|| anyhow!("table {} has no source owner in its name", table.uuid))?;
+            super::external_data_source_table::to_element(&table, owner)
+        }
         other => bail!("not yet: no row decoder for {other}"),
     }
 }
@@ -325,6 +338,15 @@ pub fn owned_object_names(kind: &str, row: &Brace, owner: &str) -> Result<Object
             Ok(ObjectNames {
                 full_name: format!("{owner}.{kind}.{}", head.1),
                 uuid: head.0,
+                children: Vec::new(),
+                types: Vec::new(),
+            })
+        }
+        "Table" => {
+            let table = super::external_data_source_table::from_brace(row)?;
+            Ok(ObjectNames {
+                full_name: format!("{owner}.Table.{}", table.name),
+                uuid: table.uuid,
                 children: Vec::new(),
                 types: Vec::new(),
             })

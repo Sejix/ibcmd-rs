@@ -245,6 +245,20 @@ impl Record {
             )))
             .child(el("ChildObjects"))
     }
+
+    /// The same element with `<ChildObjects>` naming the given tables.
+    fn element_with_tables(&self, tables: &[String]) -> Element {
+        let mut element = self.element();
+        if let Some(child) = element
+            .children
+            .iter_mut()
+            .find(|child| child.name == "ChildObjects")
+        {
+            *child = el("ChildObjects")
+                .children(tables.iter().map(|name| leaf("Table", name.clone())));
+        }
+        element
+    }
 }
 
 /// The source's element with its `<ChildObjects>` naming the given tables.
@@ -253,16 +267,31 @@ pub(crate) fn decode_with_tables(row: &Brace, tables: &[String]) -> Result<Eleme
     if record.tables.len() != tables.len() {
         bail!("ExternalDataSource table count differs from the stored collection");
     }
-    let mut element = record.element();
-    if let Some(child) = element
-        .children
-        .iter_mut()
-        .find(|child| child.name == "ChildObjects")
-    {
-        *child = el("ChildObjects")
-            .children(tables.iter().map(|name| leaf("Table", name.clone())));
+    Ok(record.element_with_tables(tables))
+}
+
+/// The source element, naming its tables through the export name index.
+pub(crate) fn decode_with_context(
+    row: &Brace,
+    context: &super::export::ExportContext,
+) -> Result<Element> {
+    let record = Record::from_brace(row)?;
+    if record.tables.is_empty() {
+        return Ok(record.element());
     }
-    Ok(element)
+    let mut names = Vec::with_capacity(record.tables.len());
+    for uuid in &record.tables {
+        let full = context
+            .names
+            .name(uuid)
+            .ok_or_else(|| anyhow!("no name for table {uuid}"))?;
+        let name = full
+            .rsplit_once(".Table.")
+            .map(|(_, name)| name)
+            .unwrap_or(full);
+        names.push(name.to_string());
+    }
+    Ok(record.element_with_tables(&names))
 }
 
 pub(crate) fn decode(row: &Brace) -> Result<Element> {
