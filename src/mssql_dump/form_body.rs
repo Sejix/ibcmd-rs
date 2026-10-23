@@ -14376,6 +14376,9 @@ fn parse_form_child_item_with_metadata_owners(
         },
         row_picture_data_path: if tag == "Table" {
             parse_form_table_property_bag_string(&fields, TableBagKey::RowPictureDataPath)
+                .filter(|value| !value.is_empty())
+                // The bag spells an empty string here, so the legacy fallback
+                // runs only after the emptiness filter.
                 .or_else(|| {
                     (matches!(wrapper, "50" | "53"))
                         .then(|| {
@@ -14384,8 +14387,8 @@ fn parse_form_child_item_with_metadata_owners(
                                 .map(|resolved| format!("{}.DefaultPicture", resolved.data_path))
                         })
                         .flatten()
+                        .filter(|value| !value.is_empty())
                 })
-                .filter(|value| !value.is_empty())
                 .or_else(|| {
                     table_schema.and_then(|schema| {
                         parse_form_table_row_picture_data_path(
