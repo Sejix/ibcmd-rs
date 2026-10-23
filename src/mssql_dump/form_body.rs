@@ -14263,7 +14263,8 @@ fn parse_form_child_item_with_metadata_owners(
         table_search_on_input: table_schema.and_then(|schema| schema.search_on_input(&fields)),
         table_initial_list_view: table_schema.and_then(|schema| schema.initial_list_view(&fields)),
         use_alternation_row_color: table_schema
-            .and_then(|schema| schema.use_alternation_row_color(&fields)),
+            .and_then(|schema| schema.use_alternation_row_color(&fields))
+            .or_else(|| legacy_table_flag(wrapper, &fields, 36)),
         default_item: if tag == "Table" {
             table_schema
                 .and_then(|schema| schema.default_item(&fields))
@@ -14344,6 +14345,8 @@ fn parse_form_child_item_with_metadata_owners(
         },
         choice_folders_and_items: if let Some(schema) = table_schema {
             parse_form_table_choice_folders_and_items(schema, &fields)
+        } else if tag == "Table" && matches!(wrapper, "50" | "53") {
+            Some("Items")
         } else if tag == "InputField" {
             field_schema_and_options
                 .as_ref()
@@ -14373,6 +14376,15 @@ fn parse_form_child_item_with_metadata_owners(
         },
         row_picture_data_path: if tag == "Table" {
             parse_form_table_property_bag_string(&fields, TableBagKey::RowPictureDataPath)
+                .or_else(|| {
+                    (matches!(wrapper, "50" | "53"))
+                        .then(|| {
+                            data_path_resolution
+                                .as_ref()
+                                .map(|resolved| format!("{}.DefaultPicture", resolved.data_path))
+                        })
+                        .flatten()
+                })
                 .filter(|value| !value.is_empty())
                 .or_else(|| {
                     table_schema.and_then(|schema| {
